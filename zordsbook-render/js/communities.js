@@ -36,10 +36,7 @@
         ${member
           ? `<button class="btn btn-small btn-leave" data-id="${c.id}" style="margin-top:4px;background:linear-gradient(#d9534f,#c9302c);border-color:#ac2925">Sair</button>
              <button class="btn btn-small open-community" data-id="${c.id}" style="margin-top:4px;margin-left:4px">Ver</button>`
-          : `<button class="btn btn-small btn-join" data-id="${c.id}" style="margin-top:4px">Participar</button>`
-          <button onclick="handleDeleteCommunity('ID_AQUI')">
-  Deletar
-</button>
+          : `<button class="btn btn-small btn-join" data-id="${c.id}" style="margin-top:4px">Participar</button>`  
         }
       </div>
     </div>`;
