@@ -160,25 +160,23 @@ async function sendFriendRequest(toUserId) {
   const sb = getSupabase();
 
   try {
-    // Cria a amizade
     const { error: friendError } = await sb
       .from("friendships")
-      .insert({ 
-        requester_id: currentUser.id, 
+      .insert({
+        requester_id: currentUser.id,
         addressee_id: toUserId,
-        status: "pending" 
+        status: "pending"
       });
 
     if (friendError) throw friendError;
 
-    // Cria notificação
     const { error: notifError } = await sb
       .from("notifications")
-      .insert({ 
-        user_id: toUserId, 
-        actor_id: currentUser.id, 
+      .insert({
+        user_id: toUserId,
+        actor_id: currentUser.id,
         kind: "friend_request",
-        read: false 
+        read: false
       });
 
     if (notifError) {
@@ -194,13 +192,11 @@ async function sendFriendRequest(toUserId) {
   }
 }
 
-
 async function acceptFriendRequest(requesterId, myId) {
   const sb = getSupabase();
   if (!requesterId || !myId) return false;
 
   try {
-    // Busca a solicitação pendente
     const { data: friendship, error: findError } = await sb
       .from("friendships")
       .select("id")
@@ -215,7 +211,6 @@ async function acceptFriendRequest(requesterId, myId) {
       return false;
     }
 
-    // Aceita a solicitação
     const { error: updateError } = await sb
       .from("friendships")
       .update({ status: "accepted" })
@@ -240,10 +235,15 @@ async function removeFriendship(friendshipId) {
 
 // ── Notificações ──────────────────────────────────────────────────────────────
 
+// CORRIGIDO: agora faz JOIN com profiles para buscar nome/avatar do ator
 async function fetchNotifications(userId) {
   const sb = getSupabase();
-  const { data, error } = await sb.from("notifications")
-    .select("*").eq("user_id", userId).order("created_at", { ascending: false }).limit(30);
+  const { data, error } = await sb
+    .from("notifications")
+    .select(`*, actor:profiles!actor_id(id, name, avatar_url)`)
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false })
+    .limit(30);
   if (error) return [];
   return data;
 }
@@ -251,6 +251,12 @@ async function fetchNotifications(userId) {
 async function markNotificationsRead(userId) {
   const sb = getSupabase();
   await sb.from("notifications").update({ read: true }).eq("user_id", userId).eq("read", false);
+}
+
+async function markNotificationAsRead(notifId) {
+  const sb = getSupabase();
+  if (!sb) return;
+  await sb.from("notifications").update({ read: true }).eq("id", notifId);
 }
 
 // ── Comunidades ───────────────────────────────────────────────────────────────
@@ -410,7 +416,6 @@ async function initNotifications(currentUser) {
   const notifs = await fetchNotifications(currentUser.id);
   const unread = notifs.filter(n => !n.read).length;
 
-  // Re-renderiza topbar com badge
   const topbarEl = document.getElementById("topbar");
   if (topbarEl) {
     const activePage = document.body.dataset.page || "";
@@ -440,51 +445,81 @@ async function bindNotifDropdown(currentUser, notifs) {
   document.addEventListener("click", () => { dropdown.style.display = "none"; });
 }
 
+// CORRIGIDO: função única, sem duplicatas, com eventos via dataset (sem onclick inline)
 function renderNotifDropdown(dropdown, notifs, currentUser) {
   if (!notifs.length) {
     dropdown.innerHTML = `<div class="notif-empty">Nenhuma notificação nova.</div>`;
     return;
   }
 
-  dropdown.innerHTML = '';
+  dropdown.innerHTML = notifs.map(notif => {
+    const actorName = notif.actor?.name || "Alguém";
+    const actorAvatar = notif.actor?.avatar_url ||
+      `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(actorName)}`;
 
-  notifs.forEach(notif => {
-    const actorName = notif.actor?.name || notif.actor?.username || "Alguém";
-    const actorAvatar = notif.actor?.avatar_url || "https://via.placeholder.com/40";
-
-    let html = '';
-
-    if (notif.kind === 'friend_request') {
-      html = `
+    if (notif.kind === "friend_request") {
+      return `
         <div class="notification-item" data-id="${notif.id}">
           <img src="${actorAvatar}" class="notif-avatar" alt="">
           <div class="notif-content">
             <strong>${actorName}</strong> quer ser seu amigo
             <div class="notif-actions">
-              <button class="accept-btn" onclick="acceptFriendFromNotif('${notif.id}', '${notif.actor_id}')">
-                Aceitar
-              </button>
-              <button class="reject-btn" onclick="rejectFriendFromNotif('${notif.id}')">
-                Recusar
-              </button>
+              <button class="accept-btn" data-notif-id="${notif.id}" data-requester-id="${notif.actor_id}">Aceitar</button>
+              <button class="reject-btn" data-notif-id="${notif.id}">Recusar</button>
             </div>
           </div>
-        </div>
-      `;
-    } 
-    else if (notif.kind === 'friend_accepted') {
-      html = `
+        </div>`;
+    }
+    if (notif.kind === "friend_accepted") {
+      return `
         <div class="notification-item">
           <img src="${actorAvatar}" class="notif-avatar" alt="">
           <div class="notif-content">
             <strong>${actorName}</strong> aceitou seu pedido de amizade
           </div>
-        </div>
-      `;
+        </div>`;
     }
+    return "";
+  }).join("");
 
-    dropdown.innerHTML += html;
+  // Vincula eventos nos botões após renderizar o HTML
+  dropdown.querySelectorAll(".accept-btn").forEach(btn => {
+    btn.onclick = async (e) => {
+      e.stopPropagation();
+      const notifId = btn.dataset.notifId;
+      const requesterId = btn.dataset.requesterId;
+      if (requesterId) await acceptFriendFromNotif(notifId, requesterId);
+    };
   });
+
+  dropdown.querySelectorAll(".reject-btn").forEach(btn => {
+    btn.onclick = async (e) => {
+      e.stopPropagation();
+      const notifId = btn.dataset.notifId;
+      if (notifId) await rejectFriendFromNotif(notifId);
+    };
+  });
+}
+
+// CORRIGIDO: chama acceptFriendRequest com 2 parâmetros (requesterId, myId)
+async function acceptFriendFromNotif(notifId, requesterId) {
+  if (!requesterId) return;
+  const myId = getCurrentUser()?.id;
+  const success = await acceptFriendRequest(requesterId, myId);
+  if (success) {
+    await markNotificationAsRead(notifId);
+    // Remove o item do dropdown visualmente
+    document.querySelector(`.notification-item[data-id="${notifId}"]`)?.remove();
+    alert("✅ Amizade aceita com sucesso!");
+  } else {
+    alert("❌ Não foi possível aceitar. Tente pela página Membros.");
+  }
+}
+
+async function rejectFriendFromNotif(notifId) {
+  if (!confirm("Recusar este pedido de amizade?")) return;
+  await markNotificationAsRead(notifId);
+  document.querySelector(`.notification-item[data-id="${notifId}"]`)?.remove();
 }
 
 function bindLogout() {
@@ -503,170 +538,3 @@ function getFeedPosts(data, communityId) {
 function getInviteCode() { return getConfig()?.GROUP_INVITE_CODE || "ZORDS2026"; }
 function validateInviteCode(input) { return input.trim().toUpperCase() === getInviteCode().toUpperCase(); }
 function isConfigured() { return !!(getConfig()?.SUPABASE_URL && getConfig()?.SUPABASE_ANON_KEY); }
-
-async function acceptFriendFromNotif(notifId, requesterId) {
-  if (!requesterId) return;
-
-  const myId = getCurrentUser()?.id;
-  const success = await acceptFriendRequest(null, requesterId, myId);
-
-  if (success) {
-    await markNotificationAsRead(notifId);
-    refreshNotifications();
-    alert("✅ Amizade aceita com sucesso!");
-  } else {
-    alert("❌ Não foi possível aceitar. Tente pela página Membros.");
-  }
-}
-
-
-async function rejectFriendFromNotif(notifId) {
-  if (!confirm("Recusar este pedido de amizade?")) return;
-
-  await markNotificationAsRead(notifId);
-  
-  const dropdown = document.getElementById('notifications-list');
-  if (dropdown) {
-    const notifs = await getUnreadNotifications();
-    renderNotifDropdown(dropdown, notifs);
-  }
-}
-
-async function markNotificationAsRead(notifId) {
-  const sb = getSupabase();
-  if (!sb) return;
-  
-  await sb
-    .from('notifications')
-    .update({ read: true })
-    .eq('id', notifId);
-
-// ── Notificações ──────────────────────────────────────────────────────────────
-
-async function getUnreadNotifications(userId) {
-  const sb = getSupabase();
-  if (!sb || !userId) return [];
-
-  const { data, error } = await sb
-    .from('notifications')
-    .select(`
-      *,
-      actor:profiles!actor_id(id, name, avatar_url)
-    `)
-    .eq('user_id', userId)
-    .eq('read', false)
-    .order('created_at', { ascending: false });
-
-  if (error) console.error("Erro ao buscar notificações:", error);
-  else console.log("Notificações carregadas:", data); // debug
-
-  return data || [];
-}
-
-function renderNotifDropdown(dropdown, notifs) {
-  if (!notifs.length) {
-    dropdown.innerHTML = `<div class="notif-empty">Nenhuma notificação nova.</div>`;
-    return;
-  }
-
-  dropdown.innerHTML = '';
-
-  notifs.forEach(notif => {
-    const actorName = notif.actor?.name || "Alguém";
-    const actorAvatar = notif.actor?.avatar_url || 
-                        `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(actorName)}`;
-
-    let html = '';
-
-    if (notif.kind === 'friend_request') {
-      html = `
-        <div class="notification-item" data-id="${notif.id}">
-          <img src="${actorAvatar}" class="notif-avatar" alt="">
-          <div class="notif-content">
-            <strong>${actorName}</strong> quer ser seu amigo
-            <div class="notif-actions">
-              <button class="accept-btn" data-notif-id="${notif.id}" data-requester-id="${notif.actor_id}">Aceitar</button>
-              <button class="reject-btn" data-notif-id="${notif.id}">Recusar</button>
-            </div>
-          </div>
-        </div>
-      `;
-    } else if (notif.kind === 'friend_accepted') {
-      html = `
-        <div class="notification-item">
-          <img src="${actorAvatar}" class="notif-avatar" alt="">
-          <div class="notif-content">
-            <strong>${actorName}</strong> aceitou seu pedido de amizade
-          </div>
-        </div>
-      `;
-    }
-
-    dropdown.innerHTML += html;
-  });
-
-  // ←←← IMPORTANTE: Adiciona os eventos nos botões
-  attachNotificationButtons();
-}
-
-function attachNotificationButtons() {
-  document.querySelectorAll('.accept-btn').forEach(btn => {
-    btn.onclick = async () => {
-      const notifId = btn.getAttribute('data-notif-id');
-      const requesterId = btn.getAttribute('data-requester-id');
-      if (requesterId) await acceptFriendFromNotif(notifId, requesterId);
-    };
-  });
-
-  document.querySelectorAll('.reject-btn').forEach(btn => {
-    btn.onclick = async () => {
-      const notifId = btn.getAttribute('data-notif-id');
-      if (notifId) await rejectFriendFromNotif(notifId);
-    };
-  });
-}
-}
-
-function renderNotifDropdown(dropdown, notifs) {
-  if (!notifs.length) {
-    dropdown.innerHTML = `<div class="notif-empty">Nenhuma notificação nova.</div>`;
-    return;
-  }
-
-  dropdown.innerHTML = '';
-
-  notifs.forEach(notif => {
-    const actorName = notif.actor?.name || "Alguém";
-    const actorAvatar = notif.actor?.avatar_url || 
-                        `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(actorName)}`;
-
-    let html = '';
-
-    if (notif.kind === 'friend_request') {
-      html = `
-        <div class="notification-item" data-id="${notif.id}">
-          <img src="${actorAvatar}" class="notif-avatar" alt="">
-          <div class="notif-content">
-            <strong>${actorName}</strong> quer ser seu amigo
-            <div class="notif-actions">
-              <button class="accept-btn" onclick="acceptFriendFromNotif('${notif.id}', '${notif.actor_id}')">Aceitar</button>
-              <button class="reject-btn" onclick="rejectFriendFromNotif('${notif.id}')">Recusar</button>
-            </div>
-          </div>
-        </div>
-      `;
-    } else if (notif.kind === 'friend_accepted') {
-      html = `
-        <div class="notification-item">
-          <img src="${actorAvatar}" class="notif-avatar" alt="">
-          <div class="notif-content">
-            <strong>${actorName}</strong> aceitou seu pedido de amizade
-          </div>
-        </div>
-      `;
-    }
-
-    dropdown.innerHTML += html;
-  });
-}
-
