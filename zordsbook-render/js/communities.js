@@ -200,6 +200,20 @@
   return data;
 }
 
+  // deletar comunidade
+
+  async function handleDeleteCommunity(id) {
+  if (!confirm("Tem certeza que quer deletar?")) return;
+
+  try {
+    await deleteCommunity(id);
+    await refresh(); // atualiza lista
+  } catch (err) {
+    console.error(err);
+    alert("Erro ao deletar comunidade");
+  }
+}
+  
   // Abre comunidade se vier na URL
   const urlComm = new URLSearchParams(window.location.search).get("id");
 
