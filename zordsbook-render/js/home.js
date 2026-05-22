@@ -144,16 +144,58 @@
   document.getElementById("form-post").addEventListener("submit", async (e) => {
     e.preventDefault();
     const text = postTextarea.value.trim();
-    if (!text || text.length > LIMITE) return;
+    if (text.length > LIMITE) return;
+
+    // Foto
+    const imageInput = document.getElementById("post-image");
+    const imageFile = imageInput?.files?.[0] || null;
+
+    // YouTube: detecta no texto ou no campo dedicado
+    const ytField = document.getElementById("post-youtube").value.trim();
+    const ytId = extractYoutubeId(ytField) || extractYoutubeId(text);
+
+    if (!text && !imageFile && !ytId) return;
+
     const btn = e.target.querySelector("button[type=submit]");
     btn.disabled = true;
+
     try {
-      await createPost(currentUser.id, text, null);
+      let imageUrl = null;
+      if (imageFile) {
+        imageUrl = await uploadPostImage(currentUser.id, imageFile);
+      }
+      await createPost(currentUser.id, text, null, imageUrl, ytId || null);
+
       postTextarea.value = "";
       postCounter.textContent = `0 / ${LIMITE} caracteres`;
+      if (imageInput) imageInput.value = "";
+      document.getElementById("post-youtube").value = "";
+      document.getElementById("post-image-preview").innerHTML = "";
       await refreshFeed();
-    } catch (err) { alert("Não foi possível publicar."); }
-    finally { btn.disabled = false; }
+    } catch (err) {
+      console.error(err);
+      alert("Não foi possível publicar: " + (err.message || err));
+    } finally {
+      btn.disabled = false;
+    }
+  });
+
+  // Preview da imagem antes de publicar
+  document.getElementById("post-image")?.addEventListener("change", (e) => {
+    const file = e.target.files?.[0];
+    const preview = document.getElementById("post-image-preview");
+    if (!preview) return;
+    if (file) {
+      const url = URL.createObjectURL(file);
+      preview.innerHTML = `<img src="${url}" style="max-width:100%;max-height:200px;border-radius:3px;margin-top:6px;" alt="preview">
+        <button type="button" id="btn-remove-image" class="btn-link" style="display:block;margin-top:4px;font-size:10px;color:#e74c3c;">✕ Remover</button>`;
+      document.getElementById("btn-remove-image").addEventListener("click", () => {
+        e.target.value = "";
+        preview.innerHTML = "";
+      });
+    } else {
+      preview.innerHTML = "";
+    }
   });
 
   // ── Spotify callback toast ────────────────────────────────────────────────
