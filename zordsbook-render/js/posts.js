@@ -99,6 +99,7 @@ function renderPost(post, data, currentUser) {
           👎${dislikeCountLabel}
         </button>
         <button type="button" class="btn-link btn-toggle-comments" data-id="${post.id}">Comentar</button>
+        ${post.userId === currentUser.id ? `<button type="button" class="btn-link btn-delete-post" data-id="${post.id}" style="color:#e74c3c;margin-left:auto">Excluir</button>` : ""}
       </div>
       <div class="comments" id="comments-${post.id}" style="display:none">
         ${commentsHtml}
@@ -149,6 +150,21 @@ function bindPostActions(currentUser, onRefresh) {
     btn.addEventListener("click", () => {
       const el = document.getElementById(`comments-${btn.dataset.id}`);
       if (el) el.style.display = el.style.display === "none" ? "block" : "none";
+    });
+  });
+
+  // 🗑 Deletar post
+  document.querySelectorAll(".btn-delete-post").forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      if (!confirm("Excluir esta publicação?")) return;
+      btn.disabled = true;
+      try {
+        await deletePost(btn.dataset.id);
+        await onRefresh();
+      } catch (e) {
+        alert("Não foi possível excluir. Tente de novo.");
+        btn.disabled = false;
+      }
     });
   });
 

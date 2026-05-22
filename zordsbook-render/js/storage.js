@@ -349,6 +349,12 @@ async function toggleDislike(postId, userId) {
   }
 }
 
+async function deletePost(postId) {
+  const sb = getSupabase();
+  const { error } = await sb.from("posts").delete().eq("id", postId);
+  if (error) throw error;
+}
+
 async function addComment(postId, userId, text) {
   const sb = getSupabase();
   const { error } = await sb.from("comments").insert({ post_id: postId, user_id: userId, text });
