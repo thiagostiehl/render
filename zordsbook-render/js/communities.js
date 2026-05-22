@@ -191,17 +191,17 @@
 
   // deletar comunidade
 
-  async function deleteCommunity(communityId) {
-  const sb = getSupabase();
+//  async function deleteCommunity(communityId) {
+//  const sb = getSupabase();
 
-  const { error } = await sb
-    .from("communities")
-    .delete()
-    .eq("id", communityId);
+//  const { error } = await sb
+//    .from("communities")
+//    .delete()
+ //   .eq("id", communityId);
 
-  if (error) throw error;
+//  if (error) throw error;
 
-  return true;
+//  return true;
 }
 
   // Abre comunidade se vier na URL
