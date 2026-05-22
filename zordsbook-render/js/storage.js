@@ -409,41 +409,4 @@ function getInviteCode() { return getConfig()?.GROUP_INVITE_CODE || "ZORDS2026";
 function validateInviteCode(input) { return input.trim().toUpperCase() === getInviteCode().toUpperCase(); }
 function isConfigured() { return !!(getConfig()?.SUPABASE_URL && getConfig()?.SUPABASE_ANON_KEY); }
 
-async function sendNotification(user_id, actor_id, kind) {
-  const sb = getSupabase();
-  if (!sb) return;
-
-  const { error } = await sb
-    .from('notifications')
-    .insert({
-      user_id,
-      actor_id,
-      kind,           // "friend_request" ou "friend_accepted"
-      read: false
-    });
-
-  if (error) console.error("Erro ao enviar notificação:", error);
-}
-
-async function getUnreadNotifications() {
-  const sb = getSupabase();
-  const user = getCurrentUser();
-  if (!sb || !user) return [];
-
-  const { data, error } = await sb
-    .from('notifications')
-    .select(`
-      *,
-      actor:profiles!actor_id (id, name, avatar_url)
-    `)
-    .eq('user_id', user.id)
-    .eq('read', false)
-    .order('created_at', { ascending: false });
-
-  if (error) {
-    console.error(error);
-    return [];
-  }
-  return data || [];
-}
 
