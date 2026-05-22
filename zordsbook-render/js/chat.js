@@ -16,7 +16,7 @@
     let sound = document.getElementById("notifSound");
     // Se não achou ou não tem source, cria um novo via URL absoluta
     if (!sound || !sound.src) {
-      sound = new Audio("/assets/sounds/msn.mp3");
+      sound = new Audio("https://zrtcrowfyzbleiilxcej.supabase.co/storage/v1/object/public/assets/msn.mp3");
     }
     sound.volume = 0.5;
     sound.currentTime = 0;
@@ -158,7 +158,6 @@
     });
 
     loadHistory(receiverId);
-    subscribeToConversation(receiverId);
     inputEl.focus();
   }
 
