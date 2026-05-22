@@ -1,4 +1,5 @@
-const supabase = window.supabaseClient;
+//const supabase = window.supabaseClient;
+const supabase = getSupabase();
 
 /* ── Som ───────────────────────── */
 
