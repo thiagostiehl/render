@@ -36,20 +36,18 @@
     sidebar.querySelector(".chat-sidebar-toggle").textContent = sidebarOpen ? "▼" : "▲";
   });
 
-  // ── Carrega amigos online ────────────────────────────────────
+  // ── Carrega todos os usuários ────────────────────────────────
   async function loadOnlineFriends() {
-    // Busca perfis de usuários online (presence via tabela profiles)
-    // Ajuste a query conforme sua estrutura de tabelas
     const { data: profiles, error } = await supabase
       .from("profiles")
-      .select("id, name, avatar_url, online_at")
-      .neq("id", user.id)           // exclui o próprio usuário
+      .select("id, name, avatar_url")
+      .neq("id", user.id)
       .order("name");
 
     const body = document.getElementById("chat-sidebar-body");
 
     if (error || !profiles || profiles.length === 0) {
-      body.innerHTML = `<p class="chat-empty">Nenhum amigo online.</p>`;
+      body.innerHTML = `<p class="chat-empty">Nenhum usuário encontrado.</p>`;
       return;
     }
 
