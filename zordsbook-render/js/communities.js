@@ -36,7 +36,7 @@
         ${member
           ? `<button class="btn btn-small btn-leave" data-id="${c.id}" style="margin-top:4px;background:linear-gradient(#d9534f,#c9302c);border-color:#ac2925">Sair</button>
              <button class="btn btn-small open-community" data-id="${c.id}" style="margin-top:4px;margin-left:4px">Ver</button>`
-          : `<button class="btn btn-small btn-join" data-id="${c.id}" style="margin-top:4px">Participar</button>`  
+          : `<button class="btn btn-small btn-join" data-id="${c.id}" style="margin-top:4px">Participar</button>`
         }
       </div>
     </div>`;
@@ -186,21 +186,6 @@
     renderLists();
   }
 
-  // deletar comunidade
-
-//  async function deleteCommunity(communityId) {
-//  const sb = getSupabase();
-
-//  const { error } = await sb
-//    .from("communities")
-//    .delete()
- //   .eq("id", communityId);
-
-//  if (error) throw error;
-
-//  return true;
-}
-
   // Abre comunidade se vier na URL
   const urlComm = new URLSearchParams(window.location.search).get("id");
 
@@ -209,4 +194,5 @@
 
   if (urlComm && allData.communityById[urlComm]) openCommunity(urlComm);
 })();
+
 
