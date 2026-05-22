@@ -194,9 +194,9 @@ async function markNotificationsRead(userId) {
 async function createCommunity(name, description, creatorId) {
   const sb = getSupabase();
 
-  if (!name) throw new Error("Nome da comunidade inválido");
+  console.log("DEBUG RECEBIDO:", { name, description, creatorId });
 
-  const safeName = name.toString();
+  const safeName = String(name);
 
   const slug =
     safeName
@@ -220,15 +220,10 @@ async function createCommunity(name, description, creatorId) {
     .select()
     .single();
 
-  if (error) throw error;
-
-  await sb
-    .from("community_members")
-    .insert({
-      community_id: data.id,
-      user_id: creatorId,
-    })
-    .catch(() => {});
+  if (error) {
+    console.error("SUPABASE ERROR:", error);
+    throw error;
+  }
 
   return data;
 }
