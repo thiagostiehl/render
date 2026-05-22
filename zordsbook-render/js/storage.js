@@ -272,7 +272,7 @@ async function createCommunity(name, description, creatorId) {
   const { data, error } = await sb.from("communities")
     .insert({ name, description, slug, creator_id: creatorId }).select().single();
   if (error) throw error;
-  await sb.from("community_members").insert({ community_id: data.id, user_id: creatorId }).catch(() => {});
+  try { await sb.from("community_members").insert({ community_id: data.id, user_id: creatorId }); } catch (_) {}
   return data;
 }
 
@@ -315,13 +315,13 @@ async function toggleLike(postId, userId) {
     // Notifica o autor do post
     const { data: post } = await sb.from("posts").select("user_id").eq("id", postId).maybeSingle();
     if (post && post.user_id !== userId) {
-      await sb.from("notifications").insert({
+      try { await sb.from("notifications").insert({
         user_id: post.user_id,
         actor_id: userId,
         kind: "like",
         post_id: postId,
         read: false,
-      }).catch(() => {});
+      }); } catch (_) {}
     }
   }
 }
@@ -338,13 +338,13 @@ async function toggleDislike(postId, userId) {
     // Notifica o autor do post
     const { data: post } = await sb.from("posts").select("user_id").eq("id", postId).maybeSingle();
     if (post && post.user_id !== userId) {
-      await sb.from("notifications").insert({
+      try { await sb.from("notifications").insert({
         user_id: post.user_id,
         actor_id: userId,
         kind: "dislike",
         post_id: postId,
         read: false,
-      }).catch(() => {});
+      }); } catch (_) {}
     }
   }
 }
@@ -410,7 +410,7 @@ async function createTestimonial(profileUserId, authorUserId, text) {
   const sb = getSupabase();
   const { error } = await sb.from("testimonials").insert({ profile_user_id: profileUserId, author_user_id: authorUserId, text });
   if (error) throw error;
-  await sb.from("notifications").insert({ user_id: profileUserId, actor_id: authorUserId, kind: "testimonial" }).catch(() => {});
+  try { await sb.from("notifications").insert({ user_id: profileUserId, actor_id: authorUserId, kind: "testimonial" }); } catch (_) {}
 }
 
 // ── Spotify friends ───────────────────────────────────────────────────────────
