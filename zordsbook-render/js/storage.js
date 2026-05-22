@@ -197,9 +197,33 @@ async function sendFriendRequest(toUserId) {
 
 async function acceptFriendRequest(friendshipId, actorId, myId) {
   const sb = getSupabase();
-  const { error } = await sb.from("friendships").update({ status: "accepted" }).eq("id", friendshipId);
-  if (error) throw error;
-  await sb.from("notifications").insert({ user_id: actorId, actor_id: myId, kind: "friend_accepted" }).catch(() => {});
+  
+  try {
+    // Aceita a amizade
+    const { error } = await sb
+      .from("friendships")
+      .update({ status: "accepted" })
+      .eq("id", friendshipId);
+
+    if (error) throw error;
+
+    // Cria notificação de aceito (opcional)
+    if (actorId && myId) {
+      await sb
+        .from("notifications")
+        .insert({ 
+          user_id: actorId, 
+          actor_id: myId, 
+          kind: "friend_accepted" 
+        })
+        .catch(err => console.warn("Falha ao criar notif de aceito:", err));
+    }
+
+    return true;
+  } catch (err) {
+    console.error("Erro ao aceitar amizade:", err);
+    return false;
+  }
 }
 
 async function removeFriendship(friendshipId) {
@@ -477,19 +501,17 @@ function isConfigured() { return !!(getConfig()?.SUPABASE_URL && getConfig()?.SU
 async function acceptFriendFromNotif(notifId, requesterId) {
   if (!requesterId) return;
 
-  const success = await acceptFriendRequest(requesterId); // usa sua função original
+  const success = await acceptFriendRequest(null, requesterId, getCurrentUser()?.id); // friendshipId = null por enquanto
 
   if (success) {
     await markNotificationAsRead(notifId);
-    // Atualiza o dropdown
-    const dropdown = document.getElementById('notifications-list');
-    if (dropdown) {
-      const notifs = await getUnreadNotifications();
-      renderNotifDropdown(dropdown, notifs);
-    }
-    alert("✅ Amizade aceita!");
+    refreshNotifications();
+    alert("✅ Amizade aceita com sucesso!");
+  } else {
+    alert("❌ Erro ao aceitar amizade.");
   }
 }
+
 
 async function rejectFriendFromNotif(notifId) {
   if (!confirm("Recusar este pedido de amizade?")) return;
@@ -640,4 +662,6 @@ function renderNotifDropdown(dropdown, notifs) {
     dropdown.innerHTML += html;
   });
 }
+
+
 
