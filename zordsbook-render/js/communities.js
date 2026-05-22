@@ -163,29 +163,42 @@
   });
 
   // Criar comunidade
-  document.getElementById("form-create-community").addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const name = document.getElementById("comm-name").value.trim();
-    const desc = document.getElementById("comm-desc").value.trim();
-    if (!name) return;
-    const btn = e.target.querySelector("button[type=submit]");
-    btn.disabled = true;
-    try {
-      const c = await createCommunity(name, desc, currentUser.id);
-      console.log("RETORNO createCommunity:", c);
-      document.getElementById("comm-name").value = "";
-      document.getElementById("comm-desc").value = "";
-      await refresh();
-      openCommunity(c.id);
-    } catch (err) { alert("Não foi possível criar a comunidade. Tente outro nome."); }
-    finally { btn.disabled = false; }
-  });
+  async function createCommunity(name, description, creatorId) {
+  const sb = getSupabase();
 
-  async function refresh() {
-    allData = await fetchCommunityData();
-    renderMiniProfile();
-    renderLists();
+  console.log("DEBUG RECEBIDO:", { name, description, creatorId });
+
+  const safeName = String(name);
+
+  const slug =
+    safeName
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-|-$/g, "")
+      .slice(0, 60) +
+    "-" +
+    Date.now().toString(36);
+
+  const { data, error } = await sb
+    .from("communities")
+    .insert({
+      name,
+      description,
+      slug,
+      creator_id: creatorId,
+    })
+    .select()
+    .single();
+
+  if (error) {
+    console.error("SUPABASE ERROR:", error);
+    throw error;
   }
+
+  return data;
+}
 
   // Abre comunidade se vier na URL
   const urlComm = new URLSearchParams(window.location.search).get("id");
