@@ -1,90 +1,236 @@
-const supabase = getSupabase();
-
-// ── ID do destinatário ──────────────────────────────────────────
-// Substitua por como você obtém o ID do amigo (URL, data-attribute, etc.)
-// Exemplo: const receiverId = new URLSearchParams(location.search).get("user");
-const receiverId = "COLOQUE_O_ID_REAL_AQUI";
-
-// ── Som ────────────────────────────────────────────────────────
-function playNotificationSound() {
-  const sound = document.getElementById("notifSound");
-  if (!sound) return;
-  sound.volume = 0.35;
-  sound.currentTime = 0;
-  sound.play().catch(() => {});
-}
-
-// ── Renderizar mensagem no DOM ─────────────────────────────────
-function renderMessage(msg, currentUserId) {
-  const container = document.getElementById("chatMessages");
-  if (!container) return;
-
-  const div = document.createElement("div");
-  div.className = msg.sender_id === currentUserId ? "msg msg-own" : "msg msg-other";
-  div.textContent = msg.message;
-  container.appendChild(div);
-  container.scrollTop = container.scrollHeight; // scroll para o final
-}
-
-// ── Carregar histórico ─────────────────────────────────────────
-async function loadMessages(currentUserId) {
-  const { data, error } = await supabase
-    .from("messages")
-    .select("*")
-    .or(
-      `and(sender_id.eq.${currentUserId},receiver_id.eq.${receiverId}),` +
-      `and(sender_id.eq.${receiverId},receiver_id.eq.${currentUserId})`
-    )
-    .order("created_at", { ascending: true });
-
-  if (error) { console.error("Erro ao carregar mensagens:", error); return; }
-  data.forEach(msg => renderMessage(msg, currentUserId));
-}
-
-// ── Enviar mensagem ────────────────────────────────────────────
-async function sendMessage(currentUserId, text) {
-  const { error } = await supabase
-    .from("messages")
-    .insert({ sender_id: currentUserId, receiver_id: receiverId, message: text });
-
-  if (error) console.error("Erro ao enviar:", error);
-}
-
-// ── Init ───────────────────────────────────────────────────────
-async function init() {
+Chat · JS
+/**
+ * chat.js — Barra de amigos online estilo Facebook clássico
+ *
+ * Depende de: supabase-client.js (getSupabase)
+ * Injeta no <body>: .chat-sidebar + .chat-window(s)
+ */
+ 
+(async function () {
+  const supabase = getSupabase();
+ 
+  // ── Usuário atual ────────────────────────────────────────────
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) { console.warn("Usuário não logado"); return; }
-
-  await loadMessages(user.id);
-
-  // Realtime com filtro apenas para esta conversa
-  supabase
-    .channel("chat-realtime")
-    .on("postgres_changes", {
-      event: "INSERT",
-      schema: "public",
-      table: "messages",
-      filter: `receiver_id=eq.${user.id}` // só mensagens para você
-    }, payload => {
-      // Filtra só mensagens desta conversa
-      if (payload.new.sender_id !== receiverId) return;
-      renderMessage(payload.new, user.id);
-      playNotificationSound();
-    })
-    .subscribe();
-
-  // Input
-  const input = document.getElementById("chatInput");
-  if (!input) return;
-  input.addEventListener("keydown", async (e) => {
-    if (e.key !== "Enter") return;
-    const text = input.value.trim();
-    if (!text) return;
-    const msg = { sender_id: user.id, receiver_id: receiverId, message: text, created_at: new Date().toISOString() };
-    renderMessage(msg, user.id); // exibe imediatamente (optimistic UI)
-    input.value = "";
-    await sendMessage(user.id, text);
+  if (!user) return; // não logado, não exibe chat
+ 
+  // ── Cria a barra lateral ─────────────────────────────────────
+  const sidebar = document.createElement("div");
+  sidebar.className = "chat-sidebar";
+  sidebar.id = "chat-sidebar";
+  sidebar.innerHTML = `
+    <div class="chat-sidebar-header" id="chat-sidebar-toggle">
+      <span>● Chat</span>
+      <span class="chat-sidebar-toggle">▼</span>
+    </div>
+    <div class="chat-sidebar-body" id="chat-sidebar-body">
+      <p class="chat-empty">Carregando...</p>
+    </div>
+  `;
+  document.body.appendChild(sidebar);
+ 
+  // Recolher / expandir a barra
+  let sidebarOpen = true;
+  document.getElementById("chat-sidebar-toggle").addEventListener("click", () => {
+    const body = document.getElementById("chat-sidebar-body");
+    sidebarOpen = !sidebarOpen;
+    body.style.display = sidebarOpen ? "block" : "none";
+    sidebar.querySelector(".chat-sidebar-toggle").textContent = sidebarOpen ? "▼" : "▲";
   });
-}
-
-init();
+ 
+  // ── Carrega amigos online ────────────────────────────────────
+  async function loadOnlineFriends() {
+    // Busca perfis de usuários online (presence via tabela profiles)
+    // Ajuste a query conforme sua estrutura de tabelas
+    const { data: profiles, error } = await supabase
+      .from("profiles")
+      .select("id, username, avatar_url, online_at")
+      .neq("id", user.id)           // exclui o próprio usuário
+      .order("username");
+ 
+    const body = document.getElementById("chat-sidebar-body");
+ 
+    if (error || !profiles || profiles.length === 0) {
+      body.innerHTML = `<p class="chat-empty">Nenhum amigo online.</p>`;
+      return;
+    }
+ 
+    body.innerHTML = "";
+    profiles.forEach(profile => {
+      const div = document.createElement("div");
+      div.className = "chat-user";
+      div.dataset.userId   = profile.id;
+      div.dataset.userName = profile.username || "Usuário";
+ 
+      const avatar = profile.avatar_url
+        ? `<img src="${profile.avatar_url}" alt="${profile.username}">`
+        : `<img src="https://ui-avatars.com/api/?name=${encodeURIComponent(profile.username || "U")}&size=28&background=8b9dc3&color=fff" alt="${profile.username}">`;
+ 
+      div.innerHTML = `
+        ${avatar}
+        <span class="chat-user-name">${profile.username || "Usuário"}</span>
+        <span class="online-dot"></span>
+      `;
+      div.addEventListener("click", () => openChatWindow(profile.id, profile.username, profile.avatar_url));
+      body.appendChild(div);
+    });
+  }
+ 
+  await loadOnlineFriends();
+ 
+  // ── Janelas de chat abertas ──────────────────────────────────
+  const openWindows = {}; // { userId: windowElement }
+  const windowOffset = 210; // px — espaço da barra de amigos
+  const windowWidth  = 270; // px — largura de cada janela
+ 
+  function openChatWindow(receiverId, receiverName, receiverAvatar) {
+    // Se já está aberta, foca no input
+    if (openWindows[receiverId]) {
+      openWindows[receiverId].querySelector(".chat-input input").focus();
+      return;
+    }
+ 
+    // Posição horizontal: empilha janelas da direita para a esquerda
+    const index  = Object.keys(openWindows).length;
+    const rightPos = windowOffset + index * windowWidth;
+ 
+    const win = document.createElement("div");
+    win.className = "chat-window";
+    win.style.right = rightPos + "px";
+ 
+    const avatarSrc = receiverAvatar
+      ? receiverAvatar
+      : `https://ui-avatars.com/api/?name=${encodeURIComponent(receiverName || "U")}&size=28&background=8b9dc3&color=fff`;
+ 
+    win.innerHTML = `
+      <div class="chat-header">
+        <span>${receiverName || "Chat"}</span>
+        <span class="chat-close" title="Fechar">×</span>
+      </div>
+      <div class="chat-messages" id="chat-msgs-${receiverId}"></div>
+      <div class="chat-input">
+        <input type="text" placeholder="Digite uma mensagem..." autocomplete="off">
+      </div>
+    `;
+ 
+    document.body.appendChild(win);
+    openWindows[receiverId] = win;
+ 
+    // Fechar janela
+    win.querySelector(".chat-close").addEventListener("click", (e) => {
+      e.stopPropagation();
+      closeChatWindow(receiverId);
+    });
+ 
+    // Minimizar ao clicar no header
+    let minimized = false;
+    win.querySelector(".chat-header").addEventListener("click", (e) => {
+      if (e.target.classList.contains("chat-close")) return;
+      minimized = !minimized;
+      const msgs  = win.querySelector(".chat-messages");
+      const input = win.querySelector(".chat-input");
+      msgs.style.display  = minimized ? "none" : "flex";
+      input.style.display = minimized ? "none" : "flex";
+    });
+ 
+    // Enviar mensagem com Enter
+    const inputEl = win.querySelector(".chat-input input");
+    inputEl.addEventListener("keydown", async (e) => {
+      if (e.key !== "Enter") return;
+      const text = inputEl.value.trim();
+      if (!text) return;
+      inputEl.value = "";
+ 
+      // Exibe otimisticamente
+      appendMessage(receiverId, text, true);
+ 
+      // Envia para o Supabase
+      const { error } = await supabase.from("messages").insert({
+        sender_id:   user.id,
+        receiver_id: receiverId,
+        message:     text
+      });
+      if (error) console.error("Erro ao enviar mensagem:", error);
+    });
+ 
+    // Carrega histórico
+    loadHistory(receiverId);
+ 
+    // Realtime: recebe mensagens desta conversa
+    subscribeToConversation(receiverId);
+ 
+    inputEl.focus();
+  }
+ 
+  function closeChatWindow(receiverId) {
+    const win = openWindows[receiverId];
+    if (!win) return;
+    win.remove();
+    delete openWindows[receiverId];
+ 
+    // Reposiciona as janelas restantes
+    Object.values(openWindows).forEach((w, i) => {
+      w.style.right = (windowOffset + i * windowWidth) + "px";
+    });
+  }
+ 
+  // ── Histórico ────────────────────────────────────────────────
+  async function loadHistory(receiverId) {
+    const { data, error } = await supabase
+      .from("messages")
+      .select("*")
+      .or(
+        `and(sender_id.eq.${user.id},receiver_id.eq.${receiverId}),` +
+        `and(sender_id.eq.${receiverId},receiver_id.eq.${user.id})`
+      )
+      .order("created_at", { ascending: true })
+      .limit(50);
+ 
+    if (error) { console.error("Erro ao carregar histórico:", error); return; }
+    data.forEach(msg => appendMessage(receiverId, msg.message, msg.sender_id === user.id));
+  }
+ 
+  // ── Renderizar bolha ─────────────────────────────────────────
+  function appendMessage(receiverId, text, isOwn) {
+    const container = document.getElementById(`chat-msgs-${receiverId}`);
+    if (!container) return;
+ 
+    const div = document.createElement("div");
+    div.className = `chat-msg ${isOwn ? "chat-msg-own" : "chat-msg-other"}`;
+    div.textContent = text;
+    container.appendChild(div);
+    container.scrollTop = container.scrollHeight;
+  }
+ 
+  // ── Realtime ─────────────────────────────────────────────────
+  const channels = {}; // { receiverId: channel }
+ 
+  function subscribeToConversation(receiverId) {
+    if (channels[receiverId]) return;
+ 
+    const ch = supabase
+      .channel(`chat-${user.id}-${receiverId}`)
+      .on("postgres_changes", {
+        event:  "INSERT",
+        schema: "public",
+        table:  "messages",
+        filter: `receiver_id=eq.${user.id}`
+      }, payload => {
+        if (payload.new.sender_id !== receiverId) return;
+        appendMessage(receiverId, payload.new.message, false);
+        playNotificationSound();
+      })
+      .subscribe();
+ 
+    channels[receiverId] = ch;
+  }
+ 
+  // ── Som de notificação ───────────────────────────────────────
+  function playNotificationSound() {
+    const sound = document.getElementById("notifSound");
+    if (!sound) return;
+    sound.volume = 0.35;
+    sound.currentTime = 0;
+    sound.play().catch(() => {});
+  }
+ 
+})();
