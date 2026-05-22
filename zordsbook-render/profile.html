@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Perfil — ZordsBook</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div id="topbar"></div>
+
+  <main style="max-width:980px;margin:16px auto;padding:0 12px">
+    <div class="profile-header">
+      <div class="profile-cover" id="profile-cover"></div>
+      <div class="profile-info">
+        <div class="profile-avatar-wrap">
+          <img class="profile-avatar" id="profile-avatar" alt="">
+          <label class="btn btn-small btn-upload profile-upload-avatar" id="upload-avatar-wrap" style="display:none">
+            Foto
+            <input type="file" id="avatar-file" accept="image/*" hidden>
+          </label>
+        </div>
+        <h1 class="profile-name" id="profile-name"></h1>
+        <p id="profile-bio" style="margin-top:6px;color:#90949c"></p>
+        <div class="profile-tabs">
+          <a href="#" class="active">Linha do tempo</a>
+          <a href="#depoimentos">Depoimentos</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="page-wrap" style="margin-top:12px;padding:0">
+      <aside class="sidebar">
+        <div class="box" id="profile-about"></div>
+        <div class="box">
+          <h3>Membros</h3>
+          <ul class="friend-list" id="profile-friends"></ul>
+        </div>
+      </aside>
+
+      <section class="feed">
+        <div class="box composer" id="own-composer" style="display:none">
+          <h3>Publicar no seu mural</h3>
+          <form id="form-profile-post">
+            <textarea id="profile-post-text" placeholder="Escreva algo no seu mural..." required></textarea>
+            <button type="submit" class="btn">Publicar</button>
+          </form>
+        </div>
+        <div class="box" id="depoimentos">
+          <h3>Depoimentos</h3>
+          <div id="testimonials-list"></div>
+          <div id="testimonial-form-wrap" style="display:none;margin-top:10px">
+            <form id="form-testimonial">
+              <div class="form-group">
+                <label>Escreva um depoimento</label>
+                <textarea id="testimonial-text" placeholder="O que você acha desta pessoa?" required maxlength="500"></textarea>
+              </div>
+              <button type="submit" class="btn btn-small">Publicar depoimento</button>
+            </form>
+          </div>
+        </div>
+        <div class="box">
+          <h3 id="wall-title">Mural</h3>
+          <div id="profile-posts"></div>
+        </div>
+      </section>
+
+      <aside class="rightbar">
+        <div class="box">
+          <h3>Informações</h3>
+          <p id="profile-meta" style="font-size:11px;color:#90949c"></p>
+        </div>
+      </aside>
+    </div>
+  </main>
+
+  <p class="footer-note">ZordsBook · Comunidade na nuvem</p>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/config.js"></script>
+  <script src="js/supabase-client.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/posts.js"></script>
+  <script src="js/profile.js"></script>
+</body>
+</html>

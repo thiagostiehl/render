@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: zordsbook
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn spotify_server:app
+    envVars:
+      - key: SPOTIPY_CLIENT_ID
+        sync: false
+      - key: SPOTIPY_CLIENT_SECRET
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: SITE_URL
+        sync: false
