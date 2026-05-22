@@ -200,26 +200,31 @@ async function acceptFriendRequest(friendshipId = null, requesterId = null, myId
   const currentUser = getCurrentUser();
   
   try {
-    let targetRequesterId = requesterId || currentUser?.id;
+    myId = myId || currentUser?.id;
 
-    // Se não tiver friendshipId, buscamos pela requester + receiver
-    if (!friendshipId && targetRequesterId && myId) {
-      const { data: friendship } = await sb
+    // Se não tiver o friendshipId, buscamos pela relação
+    if (!friendshipId && requesterId && myId) {
+      const { data: friendship, error: findError } = await sb
         .from("friendships")
         .select("id")
-        .eq("requester_id", targetRequesterId)
+        .eq("requester_id", requesterId)
         .eq("addressee_id", myId)
         .eq("status", "pending")
-        .single();
+        .maybeSingle();
 
+      if (findError) console.error("Erro ao buscar friendship:", findError);
+      
       if (friendship) {
         friendshipId = friendship.id;
       } else {
-        throw new Error("Solicitação de amizade não encontrada");
+        console.warn("❌ Solicitação não encontrada");
+        return false;
       }
     }
 
-    if (!friendshipId) throw new Error("ID da amizade não encontrado");
+    if (!friendshipId) {
+      throw new Error("ID da solicitação não encontrado");
+    }
 
     // Aceita a amizade
     const { error } = await sb
@@ -521,7 +526,7 @@ async function acceptFriendFromNotif(notifId, requesterId) {
     refreshNotifications();
     alert("✅ Amizade aceita com sucesso!");
   } else {
-    alert("❌ Não foi possível aceitar a solicitação.");
+    alert("❌ Não foi possível aceitar. Tente pela página Membros.");
   }
 }
 
