@@ -61,9 +61,17 @@
   function renderMyFriends() {
     const friendIds = getMyFriendIds(allData.friendships, currentUser.id);
     const friends = friendIds.map(id => allData.userById[id]).filter(Boolean);
-    document.getElementById("my-friends-list").innerHTML = friends.length
-      ? friends.map(f => `<li><img src="${avatarUrl(f)}" alt=""><a href="profile.html?user=${f.id}">${f.name}</a></li>`).join("")
-      : `<li style="color:#90949c;font-size:10px">Nenhum amigo ainda.</li>`;
+    const container = document.getElementById("my-friends-orkut");
+    if (!container) return;
+    container.innerHTML = friends.length
+      ? friends.map(f => `
+          <div class="member-orkut-cell">
+            <a href="profile.html?user=${f.id}">
+              <img src="${avatarUrl(f)}" alt="${f.name}">
+            </a>
+            <a href="profile.html?user=${f.id}" class="member-orkut-name">${f.name}</a>
+          </div>`).join("")
+      : `<p style="color:#90949c;font-size:10px">Nenhum amigo ainda.</p>`;
   }
 
   function renderMembersGrid(filter) {
