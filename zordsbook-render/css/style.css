@@ -1,10 +1,9 @@
- · CSS
 * {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
 }
- 
+
 body {
   font-family: Tahoma, Verdana, Arial, sans-serif;
   font-size: 11px;
@@ -13,7 +12,7 @@ body {
   min-height: 100vh;
   overflow-x: hidden;
 }
- 
+
 a {
   color: #365899;
   text-decoration: none;
@@ -21,7 +20,7 @@ a {
 a:hover {
   text-decoration: underline;
 }
- 
+
 /* ── Topbar ─────────────────────────────────────────── */
 .topbar {
   background: linear-gradient(#4e69a2, #3b5998 50%, #324c81);
@@ -32,7 +31,7 @@ a:hover {
   top: 0;
   z-index: 100;
 }
- 
+
 .topbar-inner {
   max-width: 980px;
   margin: 0 auto;
@@ -42,7 +41,7 @@ a:hover {
   justify-content: space-between;
   height: 100%;
 }
- 
+
 .logo {
   font-size: 28px;
   font-weight: bold;
@@ -50,9 +49,9 @@ a:hover {
   color: #fff;
   text-shadow: 0 1px 2px rgba(0,0,0,0.3);
 }
- 
+
 .logo span { font-size: 22px; }
- 
+
 .topbar nav a {
   color: #d8dfea;
   margin-left: 14px;
@@ -64,12 +63,12 @@ a:hover {
   color: #fff;
   text-decoration: none;
 }
- 
+
 .topbar-user {
   font-size: 11px;
   color: #d8dfea;
 }
- 
+
 /* ── Layout ──────────────────────────────────────────── */
 .page-wrap {
   max-width: 980px;
@@ -79,7 +78,7 @@ a:hover {
   grid-template-columns: 180px 1fr 240px;
   gap: 12px;
 }
- 
+
 .sidebar,
 .feed,
 .rightbar {
@@ -87,7 +86,7 @@ a:hover {
   flex-direction: column;
   gap: 10px;
 }
- 
+
 .box {
   background: #fff;
   border: 1px solid #bdc7d8;
@@ -100,20 +99,20 @@ a:hover {
   margin-bottom: 8px;
   font-weight: bold;
 }
- 
+
 /* ── Login ───────────────────────────────────────────── */
 .login-page {
   min-height: 100vh;
   background: linear-gradient(white, #d3d8e8 60%);
 }
- 
+
 .login-header {
   background: linear-gradient(#4e69a2, #3b5998);
   padding: 12px 0;
   text-align: center;
 }
 .login-header .logo { display: inline-block; }
- 
+
 .login-container {
   max-width: 980px;
   margin: 40px auto;
@@ -123,7 +122,7 @@ a:hover {
   gap: 40px;
   align-items: start;
 }
- 
+
 .login-tagline { padding-top: 40px; }
 .login-tagline h1 {
   font-size: 20px;
@@ -131,7 +130,7 @@ a:hover {
   line-height: 1.4;
   color: #1d2129;
 }
- 
+
 .login-box {
   background: #fff;
   border: 1px solid #bdc7d8;
@@ -144,7 +143,7 @@ a:hover {
   margin-bottom: 12px;
   color: #1d2129;
 }
- 
+
 /* ── Formulários ─────────────────────────────────────── */
 .form-group { margin-bottom: 10px; }
 .form-group label {
@@ -165,7 +164,7 @@ a:hover {
   resize: vertical;
   min-height: 60px;
 }
- 
+
 /* ── Botões ──────────────────────────────────────────── */
 .btn {
   background: linear-gradient(#627aac, #47629e);
@@ -179,15 +178,15 @@ a:hover {
   font-family: inherit;
 }
 .btn:hover { background: linear-gradient(#6b84b4, #4f6aa8); }
- 
+
 .btn-green {
   background: linear-gradient(#69a74e, #5b9a3f);
   border-color: #3b6e22;
 }
 .btn-green:hover { background: linear-gradient(#79b85e, #6aaa4f); }
- 
+
 .btn-small { padding: 2px 8px; font-size: 10px; }
- 
+
 .btn-link {
   background: none;
   border: none;
@@ -198,7 +197,7 @@ a:hover {
   font-family: inherit;
 }
 .btn-link:hover { text-decoration: underline; }
- 
+
 .error-msg {
   background: #ffebe8;
   border: 1px solid #dd3c10;
@@ -207,7 +206,7 @@ a:hover {
   margin-bottom: 10px;
   border-radius: 2px;
 }
- 
+
 /* ── Perfil ──────────────────────────────────────────── */
 .profile-header {
   background: #fff;
@@ -215,7 +214,7 @@ a:hover {
   border-radius: 3px;
   overflow: hidden;
 }
- 
+
 .profile-cover {
   height: 200px;
   background: linear-gradient(#8b9dc3, #3b5998);
@@ -226,12 +225,12 @@ a:hover {
   height: 100%;
   object-fit: cover;
 }
- 
+
 .profile-info {
   padding: 0 16px 12px;
   position: relative;
 }
- 
+
 .profile-avatar {
   width: 160px;
   height: 160px;
@@ -241,13 +240,13 @@ a:hover {
   background: #ddd;
   object-fit: cover;
 }
- 
+
 .profile-name {
   font-size: 24px;
   font-weight: bold;
   margin-top: 8px;
 }
- 
+
 .profile-tabs {
   display: flex;
   gap: 4px;
@@ -266,7 +265,7 @@ a:hover {
   color: #fff;
   text-decoration: none;
 }
- 
+
 /* ── Posts ───────────────────────────────────────────── */
 .composer textarea {
   width: 100%;
@@ -276,7 +275,7 @@ a:hover {
   font-size: 11px;
   margin-bottom: 4px;
 }
- 
+
 .char-counter {
   color: #90949c;
   font-size: 10px;
@@ -286,7 +285,7 @@ a:hover {
   color: #dd3c10;
   font-weight: bold;
 }
- 
+
 .post {
   border-top: 1px solid #e9eaed;
   padding-top: 10px;
@@ -297,7 +296,7 @@ a:hover {
   padding-top: 0;
   margin-top: 0;
 }
- 
+
 .post-header {
   display: flex;
   gap: 8px;
@@ -327,7 +326,7 @@ a:hover {
   color: #3b5998;
   font-weight: bold;
 }
- 
+
 .comments {
   margin: 8px 0 0 48px;
   background: #f6f7f8;
@@ -340,7 +339,7 @@ a:hover {
   font-size: 11px;
 }
 .comment strong { color: #365899; }
- 
+
 .comment-form {
   display: flex;
   gap: 6px;
@@ -352,7 +351,7 @@ a:hover {
   border: 1px solid #bdc7d8;
   font-size: 11px;
 }
- 
+
 /* ── Sidebar perfil mini ─────────────────────────────── */
 .mini-profile { text-align: center; }
 .mini-profile img {
@@ -361,7 +360,7 @@ a:hover {
   border: 1px solid #bdc7d8;
   margin-bottom: 6px;
 }
- 
+
 .friend-list li {
   list-style: none;
   padding: 4px 0;
@@ -375,7 +374,7 @@ a:hover {
   height: 24px;
   border-radius: 2px;
 }
- 
+
 .suggestion {
   display: flex;
   gap: 8px;
@@ -387,7 +386,7 @@ a:hover {
   width: 32px;
   height: 32px;
 }
- 
+
 /* ── Now Playing ─────────────────────────────────────── */
 .online-now-playing {
   display: flex;
@@ -417,7 +416,7 @@ a:hover {
 .now-playing-album,
 .now-playing-loading { color: #555; font-size: 11px; margin-bottom: 4px; }
 .now-playing-link a { color: #365899; font-size: 10px; }
- 
+
 /* ── Rodapé ──────────────────────────────────────────── */
 .footer-note {
   text-align: center;
@@ -425,7 +424,7 @@ a:hover {
   font-size: 10px;
   margin: 24px 0;
 }
- 
+
 /* ── Comunidades ─────────────────────────────────────── */
 .community-tabs {
   display: flex;
@@ -451,7 +450,7 @@ a:hover {
 }
 .post-community { color: #365899; font-weight: bold; }
 .community-card:last-child { border-bottom: none; }
- 
+
 /* ── Upload de avatar/capa ───────────────────────────── */
 .profile-avatar-wrap {
   position: relative;
@@ -465,7 +464,7 @@ a:hover {
   padding: 10px 0;
 }
 .testimonial:first-child { border-top: none; padding-top: 0; }
- 
+
 /* ── Membros ─────────────────────────────────────────── */
 .members-grid {
   display: grid;
@@ -488,10 +487,10 @@ a:hover {
   object-fit: cover;
 }
 .member-info { min-width: 0; flex: 1; }
- 
+
 /* ── Notificações ────────────────────────────────────── */
 .notif-wrap { position: relative; }
- 
+
 .notif-btn {
   background: transparent;
   border: 1px solid transparent;
@@ -509,7 +508,7 @@ a:hover {
   border-color: rgba(0,0,0,0.15);
   color: #fff;
 }
- 
+
 .notif-badge {
   position: absolute;
   top: -2px;
@@ -528,7 +527,7 @@ a:hover {
   border: 1px solid #fff;
   line-height: 1;
 }
- 
+
 .notif-dropdown {
   position: absolute;
   top: 38px;
@@ -542,7 +541,7 @@ a:hover {
   overflow: hidden;
   display: none;
 }
- 
+
 .notif-header {
   background: #f6f7f8;
   border-bottom: 1px solid #dddfe2;
@@ -551,9 +550,9 @@ a:hover {
   font-size: 11px;
   color: #1d2129;
 }
- 
+
 .notif-list { max-height: 420px; overflow-y: auto; }
- 
+
 .notification-item {
   display: flex;
   gap: 8px;
@@ -566,7 +565,7 @@ a:hover {
 .notification-item.unread { background: #edf2fa; }
 .notification-item.unread:hover { background: #e3ebf7; }
 .notification-item:last-child { border-bottom: none; }
- 
+
 .notif-avatar {
   width: 40px;
   height: 40px;
@@ -578,9 +577,9 @@ a:hover {
 .notif-content { flex: 1; font-size: 11px; line-height: 1.4; color: #1d2129; }
 .notif-content strong { color: #365899; }
 .notif-time { margin-top: 2px; color: #90949c; font-size: 10px; }
- 
+
 .notif-actions { margin-top: 8px; display: flex; gap: 6px; }
- 
+
 .accept-btn,
 .reject-btn {
   padding: 3px 8px;
@@ -602,7 +601,7 @@ a:hover {
   color: #4b4f56;
 }
 .reject-btn:hover { background: #dfe3e8; }
- 
+
 .notif-empty {
   padding: 30px 20px;
   text-align: center;
@@ -610,193 +609,304 @@ a:hover {
   color: #90949c;
   background: #fff;
 }
- 
-/* ── Chat lateral (barra de amigos online) ───────────── */
- 
-/* Barra fixa no canto inferior direito */
+
+/* ═══════════════════════════════════════════════════════
+   CHAT ESTILO MSN MESSENGER
+═══════════════════════════════════════════════════════ */
+
+@import url('https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;600&display=swap');
+
+/* ── Barra de contatos (lista de amigos) ─────────────── */
 .chat-sidebar {
   position: fixed;
   bottom: 0;
   right: 0;
-  width: 200px;
-  background: #f0f2f5;
-  border: 1px solid #bdc7d8;
+  width: 240px;
+  background: linear-gradient(180deg, #dce9f7 0%, #c5d9f1 40%, #b8d0ee 100%);
+  border: 1px solid #6a93c5;
   border-bottom: none;
-  border-radius: 4px 4px 0 0;
+  border-radius: 6px 6px 0 0;
   z-index: 1000;
   display: flex;
   flex-direction: column;
-  max-height: 420px;
+  max-height: 500px;
+  box-shadow: 0 -2px 12px rgba(0,80,180,0.18);
+  font-family: 'Segoe UI', Tahoma, sans-serif;
 }
- 
-/* Cabeçalho da barra — clicável para recolher */
+
+/* Cabeçalho MSN */
 .chat-sidebar-header {
-  background: linear-gradient(#4e69a2, #3b5998);
+  background: linear-gradient(180deg, #1a6fc4 0%, #1558a0 50%, #0f4a8a 100%);
   color: #fff;
-  padding: 7px 10px;
-  font-size: 11px;
-  font-weight: bold;
+  padding: 9px 12px;
+  font-size: 12px;
+  font-weight: 600;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border-radius: 4px 4px 0 0;
+  border-radius: 6px 6px 0 0;
   user-select: none;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.4);
+  letter-spacing: 0.3px;
 }
-.chat-sidebar-header:hover { background: linear-gradient(#5878b0, #445fa8); }
-.chat-sidebar-toggle { font-size: 10px; opacity: 0.8; }
- 
-/* Lista de usuários online (recolhível) */
+.chat-sidebar-header:hover {
+  background: linear-gradient(180deg, #2278d0 0%, #1a65ae 50%, #1558a0 100%);
+}
+.chat-sidebar-toggle { font-size: 11px; opacity: 0.85; }
+
+/* Subtítulo "Online" */
 .chat-sidebar-body {
   overflow-y: auto;
-  max-height: 340px;
-  background: #fff;
-  border-top: 1px solid #d8dfea;
+  max-height: 420px;
+  background: transparent;
 }
- 
-/* Item de usuário */
+
+.chat-online-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: #1a4a7a;
+  padding: 6px 12px 3px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 1px solid #a8c4e0;
+  background: rgba(255,255,255,0.3);
+}
+
+/* Item de contato */
 .chat-user {
   display: flex;
   align-items: center;
-  gap: 7px;
-  padding: 6px 10px;
+  gap: 8px;
+  padding: 7px 12px;
   cursor: pointer;
-  border-bottom: 1px solid #f0f2f5;
+  border-bottom: 1px solid rgba(168,196,224,0.4);
   transition: background 0.12s;
 }
-.chat-user:hover { background: #e9eff7; }
+.chat-user:hover {
+  background: rgba(255,255,255,0.55);
+}
 .chat-user:last-child { border-bottom: none; }
- 
-/* Avatar */
+
+/* Avatar redondo estilo MSN */
 .chat-user img {
-  width: 28px;
-  height: 28px;
-  border-radius: 2px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
   object-fit: cover;
-  border: 1px solid #ccc;
+  border: 2px solid #fff;
+  box-shadow: 0 1px 4px rgba(0,80,180,0.25);
   flex-shrink: 0;
 }
- 
-/* Nome */
+
+/* Nome do contato */
 .chat-user-name {
   flex: 1;
-  font-size: 11px;
-  color: #1d2129;
+  font-size: 12px;
+  color: #1a3a5c;
+  font-weight: 600;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
- 
-/* Bolinha verde */
+
+/* Bolinha de status */
 .online-dot {
-  width: 8px;
-  height: 8px;
-  background: #42b72a;
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
   flex-shrink: 0;
-  box-shadow: 0 0 3px rgba(66,183,42,0.7);
+  border: 1.5px solid #fff;
 }
- 
-/* ── Janela de conversa ──────────────────────────────── */
+/* Verde = online */
+.online-dot.is-online {
+  background: #00c846;
+  box-shadow: 0 0 5px rgba(0,200,70,0.7);
+}
+/* Cinza = offline */
+.online-dot.is-offline {
+  background: #aab8c2;
+  box-shadow: none;
+}
+
+/* Sem contatos */
+.chat-empty {
+  padding: 18px 12px;
+  font-size: 11px;
+  color: #4a6a8a;
+  text-align: center;
+  font-style: italic;
+}
+
+/* ── Janela de conversa estilo MSN ───────────────────── */
 .chat-window {
   position: fixed;
   bottom: 0;
-  right: 210px;        /* fica ao lado da barra de amigos */
-  width: 260px;
+  right: 250px;
+  width: 320px;
   background: #fff;
-  border: 1px solid #bdc7d8;
+  border: 1px solid #6a93c5;
   border-bottom: none;
-  border-radius: 4px 4px 0 0;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  border-radius: 6px 6px 0 0;
+  box-shadow: 0 -2px 16px rgba(0,80,180,0.2);
   z-index: 1001;
   display: flex;
   flex-direction: column;
+  font-family: 'Segoe UI', Tahoma, sans-serif;
+  overflow: hidden;
 }
- 
-/* Segunda janela fica deslocada */
-.chat-window:nth-child(2) { right: 480px; }
-.chat-window:nth-child(3) { right: 750px; }
- 
-/* Cabeçalho azul */
+
+/* Cabeçalho da janela */
 .chat-header {
-  background: linear-gradient(#4e69a2, #3b5998);
+  background: linear-gradient(180deg, #1a6fc4 0%, #1558a0 50%, #0f4a8a 100%);
   color: #fff;
-  padding: 6px 10px;
-  font-size: 11px;
-  font-weight: bold;
+  padding: 0;
   cursor: pointer;
+  display: flex;
+  align-items: stretch;
+  justify-content: space-between;
+  border-radius: 6px 6px 0 0;
+  user-select: none;
+  min-height: 42px;
+}
+.chat-header:hover {
+  background: linear-gradient(180deg, #2278d0 0%, #1a65ae 50%, #1558a0 100%);
+}
+
+.chat-header-info {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  border-radius: 4px 4px 0 0;
-  user-select: none;
+  gap: 8px;
+  padding: 6px 10px;
+  flex: 1;
 }
-.chat-header:hover { background: linear-gradient(#5878b0, #445fa8); }
+
+.chat-header-avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 2px solid rgba(255,255,255,0.6);
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.chat-header-name {
+  font-size: 12px;
+  font-weight: 600;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.35);
+  letter-spacing: 0.2px;
+}
+
+/* Botão fechar vermelho estilo Windows XP */
 .chat-close {
-  font-size: 14px;
-  line-height: 1;
-  opacity: 0.8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  background: linear-gradient(180deg, #e05050 0%, #c03030 100%);
+  color: #fff;
+  font-size: 16px;
+  font-weight: bold;
+  border-left: 1px solid rgba(0,0,0,0.2);
+  border-radius: 0 6px 0 0;
   cursor: pointer;
+  transition: background 0.12s;
+  line-height: 1;
 }
-.chat-close:hover { opacity: 1; }
- 
+.chat-close:hover {
+  background: linear-gradient(180deg, #f06060 0%, #d04040 100%);
+}
+
+/* Faixa colorida MSN abaixo do header */
+.chat-msn-stripe {
+  height: 4px;
+  background: linear-gradient(90deg, #f90 0%, #f60 25%, #f00 50%, #c0f 75%, #06f 100%);
+}
+
 /* Área de mensagens */
 .chat-messages {
-  height: 200px;
+  height: 260px;
   overflow-y: auto;
-  padding: 8px;
-  background: #fff;
+  padding: 10px 12px;
+  background: #f0f7ff;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
 }
- 
-/* Bolhas */
+
+/* Scrollbar fina estilo MSN */
+.chat-messages::-webkit-scrollbar { width: 5px; }
+.chat-messages::-webkit-scrollbar-track { background: #dce9f7; }
+.chat-messages::-webkit-scrollbar-thumb { background: #7aabde; border-radius: 3px; }
+
+/* Bolhas de mensagem */
 .chat-msg {
-  max-width: 80%;
-  padding: 5px 8px;
-  border-radius: 10px;
-  font-size: 11px;
-  line-height: 1.4;
+  max-width: 78%;
+  padding: 6px 10px;
+  font-size: 12px;
+  line-height: 1.45;
   word-break: break-word;
+  border-radius: 12px;
+  position: relative;
 }
 .chat-msg-own {
   align-self: flex-end;
-  background: #0084ff;
+  background: linear-gradient(135deg, #1a6fc4, #1558a0);
   color: #fff;
   border-bottom-right-radius: 3px;
+  box-shadow: 0 1px 3px rgba(0,80,180,0.3);
 }
 .chat-msg-other {
   align-self: flex-start;
-  background: #e4e6eb;
-  color: #1d2129;
+  background: #fff;
+  color: #1a2a3a;
+  border: 1px solid #c5d9f1;
   border-bottom-left-radius: 3px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
 }
- 
-/* Campo de input */
+
+/* Rótulo do remetente acima da bolha (estilo MSN clássico) */
+.chat-msg-label {
+  font-size: 10px;
+  font-weight: 600;
+  margin-bottom: 2px;
+  color: #1a6fc4;
+}
+.chat-msg-label-own {
+  align-self: flex-end;
+  color: #fff;
+  opacity: 0.75;
+  text-align: right;
+}
+
+/* Barra de digitação */
 .chat-input {
-  border-top: 1px solid #d8dfea;
+  border-top: 2px solid #c5d9f1;
+  background: #fff;
   display: flex;
+  align-items: center;
+  padding: 0 8px;
 }
 .chat-input input {
   flex: 1;
   border: none;
-  padding: 7px 10px;
-  font-size: 11px;
-  font-family: inherit;
+  padding: 9px 6px;
+  font-size: 12px;
+  font-family: 'Segoe UI', Tahoma, sans-serif;
   outline: none;
-  background: #fff;
+  background: transparent;
+  color: #1a2a3a;
 }
-.chat-input input::placeholder { color: #bcc0c4; }
- 
-/* Estado "sem amigos online" */
-.chat-empty {
-  padding: 14px 10px;
-  font-size: 11px;
-  color: #90949c;
-  text-align: center;
+.chat-input input::placeholder { color: #8aabbf; font-style: italic; }
+
+/* Botão enviar (Enter hint) */
+.chat-send-hint {
+  font-size: 10px;
+  color: #8aabbf;
+  padding-right: 4px;
+  white-space: nowrap;
 }
- 
+
 /* ── Responsive ──────────────────────────────────────── */
 @media (max-width: 800px) {
   .page-wrap { grid-template-columns: 1fr; }
@@ -804,7 +914,7 @@ a:hover {
   .login-container { grid-template-columns: 1fr; }
   .chat-sidebar { display: none; } /* em mobile esconde */
 }
- 
+
 @media (max-width: 980px) {
   .online-now-playing { flex-direction: column; }
   .now-playing-section { width: 100%; min-width: auto; }
