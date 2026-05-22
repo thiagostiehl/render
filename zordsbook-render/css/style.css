@@ -967,3 +967,7 @@ a:hover {
 .chat-input input:focus {
   outline: none;
 }
+
+body {
+  border: 10px solid red !important;
+}
