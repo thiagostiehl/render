@@ -919,3 +919,190 @@ a:hover {
   .online-now-playing { flex-direction: column; }
   .now-playing-section { width: 100%; min-width: auto; }
 }
+/* ══════════════════════════════════════════════════════════════════
+   ZordsBook — CSS adicional (adicione ao FINAL do style.css)
+   Features: fotos, YouTube, joinha/antijoinha, grades estilo Orkut
+   ══════════════════════════════════════════════════════════════════ */
+
+/* ── Composer — linha de mídia ──────────────────────────────────── */
+.composer-media-row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  margin: 6px 0 4px;
+}
+
+.composer-media-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* ── Mídia no post (foto e YouTube) ─────────────────────────────── */
+.post-media {
+  margin: 8px 0 4px;
+  border-radius: 3px;
+  overflow: hidden;
+  background: #f0f0f0;
+}
+
+.post-media img {
+  display: block;
+  max-width: 100%;
+  max-height: 400px;
+  object-fit: cover;
+  width: 100%;
+}
+
+.post-media-yt {
+  position: relative;
+  padding-bottom: 56.25%; /* 16:9 */
+  height: 0;
+  background: #000;
+}
+
+.post-media-yt iframe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* ── Reações: 👍 👎 ─────────────────────────────────────────────── */
+.btn-reaction {
+  background: none;
+  border: 1px solid #bdc7d8;
+  border-radius: 3px;
+  padding: 2px 8px;
+  font-size: 12px;
+  cursor: pointer;
+  font-family: inherit;
+  color: #365899;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: background 0.1s, border-color 0.1s;
+}
+
+.btn-reaction:hover {
+  background: #edf2fa;
+  border-color: #47629e;
+}
+
+.btn-reaction.active-like {
+  background: #dff0d8;
+  border-color: #5b9a3f;
+  color: #3b6e22;
+  font-weight: bold;
+}
+
+.btn-reaction.active-dislike {
+  background: #fde8e8;
+  border-color: #c9302c;
+  color: #a02020;
+  font-weight: bold;
+}
+
+.reaction-count {
+  font-size: 10px;
+  font-weight: bold;
+}
+
+/* ── Grade de comunidades estilo Orkut ──────────────────────────── */
+.community-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  gap: 12px;
+  padding: 4px 0;
+}
+
+.community-orkut-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 4px;
+}
+
+.community-orkut-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 4px;
+  background: linear-gradient(135deg, #3b5998, #47629e);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 26px;
+  font-weight: bold;
+  border: 1px solid #bdc7d8;
+  transition: opacity 0.15s;
+}
+
+.community-orkut-card a:hover .community-orkut-icon {
+  opacity: 0.85;
+}
+
+.community-orkut-info {
+  width: 100%;
+}
+
+.community-orkut-name {
+  font-size: 10px;
+  font-weight: bold;
+  color: #365899;
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.community-orkut-meta {
+  font-size: 10px;
+  color: #90949c;
+  margin: 1px 0 0;
+}
+
+/* ── Grade de membros/amigos estilo Orkut ───────────────────────── */
+.members-orkut-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  padding: 4px 0;
+}
+
+.member-orkut-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 3px;
+}
+
+.member-orkut-cell img {
+  width: 52px;
+  height: 52px;
+  border-radius: 3px;
+  object-fit: cover;
+  border: 1px solid #bdc7d8;
+  display: block;
+  transition: opacity 0.15s;
+}
+
+.member-orkut-cell img:hover {
+  opacity: 0.85;
+}
+
+.member-orkut-name {
+  font-size: 9px;
+  color: #365899;
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
