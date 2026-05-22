@@ -408,8 +408,50 @@ async function bindNotifDropdown(currentUser, notifs) {
 
 function renderNotifDropdown(dropdown, notifs, currentUser) {
   if (!notifs.length) {
-    dropdown.innerHTML = `<div class="notif-empty">Nenhuma notificação ainda.</div>`;
+    dropdown.innerHTML = `<div class="notif-empty">Nenhuma notificação nova.</div>`;
     return;
+  }
+
+  dropdown.innerHTML = '';
+
+  notifs.forEach(notif => {
+    const actorName = notif.actor?.name || notif.actor?.username || "Alguém";
+    const actorAvatar = notif.actor?.avatar_url || "https://via.placeholder.com/40";
+
+    let html = '';
+
+    if (notif.kind === 'friend_request') {
+      html = `
+        <div class="notification-item" data-id="${notif.id}">
+          <img src="${actorAvatar}" class="notif-avatar" alt="">
+          <div class="notif-content">
+            <strong>${actorName}</strong> quer ser seu amigo
+            <div class="notif-actions">
+              <button class="accept-btn" onclick="acceptFriendFromNotif('${notif.id}', '${notif.actor_id}')">
+                Aceitar
+              </button>
+              <button class="reject-btn" onclick="rejectFriendFromNotif('${notif.id}')">
+                Recusar
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+    } 
+    else if (notif.kind === 'friend_accepted') {
+      html = `
+        <div class="notification-item">
+          <img src="${actorAvatar}" class="notif-avatar" alt="">
+          <div class="notif-content">
+            <strong>${actorName}</strong> aceitou seu pedido de amizade
+          </div>
+        </div>
+      `;
+    }
+
+    dropdown.innerHTML += html;
+  });
+}
   }
   const kindLabel = { friend_request: "quer ser seu amigo", friend_accepted: "aceitou sua amizade", testimonial: "escreveu um depoimento", post_on_wall: "publicou no seu mural" };
   dropdown.innerHTML = notifs.slice(0, 15).map(n => `
@@ -438,5 +480,44 @@ function getFeedPosts(data, communityId) {
 function getInviteCode() { return getConfig()?.GROUP_INVITE_CODE || "ZORDS2026"; }
 function validateInviteCode(input) { return input.trim().toUpperCase() === getInviteCode().toUpperCase(); }
 function isConfigured() { return !!(getConfig()?.SUPABASE_URL && getConfig()?.SUPABASE_ANON_KEY); }
+
+async function acceptFriendFromNotif(notifId, requesterId) {
+  if (!requesterId) return;
+
+  const success = await acceptFriendRequest(requesterId); // usa sua função original
+
+  if (success) {
+    await markNotificationAsRead(notifId);
+    // Atualiza o dropdown
+    const dropdown = document.getElementById('notifications-list');
+    if (dropdown) {
+      const notifs = await getUnreadNotifications();
+      renderNotifDropdown(dropdown, notifs);
+    }
+    alert("✅ Amizade aceita!");
+  }
+}
+
+async function rejectFriendFromNotif(notifId) {
+  if (!confirm("Recusar este pedido de amizade?")) return;
+
+  await markNotificationAsRead(notifId);
+  
+  const dropdown = document.getElementById('notifications-list');
+  if (dropdown) {
+    const notifs = await getUnreadNotifications();
+    renderNotifDropdown(dropdown, notifs);
+  }
+}
+
+async function markNotificationAsRead(notifId) {
+  const sb = getSupabase();
+  if (!sb) return;
+  
+  await sb
+    .from('notifications')
+    .update({ read: true })
+    .eq('id', notifId);
+}
 
 
