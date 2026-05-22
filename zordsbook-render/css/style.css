@@ -968,6 +968,14 @@ a:hover {
   outline: none;
 }
 
-body {
-  border: 10px solid red !important;
+.chat-sidebar {
+  background: red !important;
+  width: 300px !important;
 }
+
+.chat-window {
+  background: yellow !important;
+  display: block !important;
+}
+
+
