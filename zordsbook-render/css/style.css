@@ -590,124 +590,183 @@ a:hover {
 }
 
 /* ── Notificações ────────────────────────────────────────────────────────── */
+/* ── Notificações estilo Facebook clássico ───────────────────────────── */
+
 .notif-wrap {
   position: relative;
 }
 
+/* Botão do sino */
 .notif-btn {
-  background: none;
-  border: none;
-  font-size: 24px;
+  background: transparent;
+  border: 1px solid transparent;
+  color: #d8dfea;
+  font-size: 18px;
+  font-weight: bold;
   cursor: pointer;
-  padding: 6px 10px;
-  border-radius: 50%;
-  transition: background 0.2s;
+  padding: 4px 8px;
+  border-radius: 2px;
+  transition: background 0.15s;
+  position: relative;
 }
 
 .notif-btn:hover {
-  background: rgba(255,255,255,0.1);
+  background: rgba(255,255,255,0.12);
+  border-color: rgba(0,0,0,0.15);
+  color: #fff;
 }
 
+/* Badge */
+.notif-badge {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  background: #c0392b;
+  color: white;
+  font-size: 10px;
+  font-weight: bold;
+  min-width: 16px;
+  height: 16px;
+  border-radius: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+  border: 1px solid #fff;
+  line-height: 1;
+}
+
+/* Dropdown */
 .notif-dropdown {
   position: absolute;
-  top: 55px;
-  right: 10px;
-  width: 340px;
-  background: #1f1f1f;
-  border: 1px solid #333;
-  border-radius: 12px;
-  box-shadow: 0 10px 20px rgba(0,0,0,0.5);
-  max-height: 480px;
-  overflow-y: auto;
-  z-index: 1000;
+  top: 38px;
+  right: 0;
+  width: 330px;
+  background: #fff;
+  border: 1px solid #bdc7d8;
+  border-radius: 2px;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.25);
+  z-index: 999;
+  overflow: hidden;
   display: none;
 }
 
-.notif-dropdown::-webkit-scrollbar {
-  width: 6px;
-}
-.notif-dropdown::-webkit-scrollbar-thumb {
-  background: #444;
-  border-radius: 10px;
+/* Cabeçalho */
+.notif-header {
+  background: #f6f7f8;
+  border-bottom: 1px solid #dddfe2;
+  padding: 8px 10px;
+  font-weight: bold;
+  font-size: 11px;
+  color: #1d2129;
 }
 
-/* Item da notificação */
+/* Lista */
+.notif-list {
+  max-height: 420px;
+  overflow-y: auto;
+}
+
+/* Item */
 .notification-item {
-  padding: 14px 16px;
-  border-bottom: 1px solid #333;
   display: flex;
-  gap: 12px;
-  transition: background 0.2s;
+  gap: 8px;
+  padding: 10px;
+  border-bottom: 1px solid #e9eaed;
+  transition: background 0.15s;
+  cursor: pointer;
 }
 
 .notification-item:hover {
-  background: #2a2a2a;
+  background: #f6f7f8;
+}
+
+.notification-item.unread {
+  background: #edf2fa;
+}
+
+.notification-item.unread:hover {
+  background: #e3ebf7;
 }
 
 .notification-item:last-child {
   border-bottom: none;
 }
 
+/* Avatar */
 .notif-avatar {
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  border-radius: 2px;
   object-fit: cover;
+  border: 1px solid #ccc;
   flex-shrink: 0;
 }
 
+/* Conteúdo */
 .notif-content {
   flex: 1;
-  color: #ddd;
-  font-size: 15px;
+  font-size: 11px;
   line-height: 1.4;
+  color: #1d2129;
 }
 
 .notif-content strong {
-  color: #fff;
+  color: #365899;
 }
 
+.notif-time {
+  margin-top: 2px;
+  color: #90949c;
+  font-size: 10px;
+}
+
+/* Botões */
 .notif-actions {
-  margin-top: 10px;
+  margin-top: 8px;
   display: flex;
-  gap: 8px;
+  gap: 6px;
 }
 
-.accept-btn, .reject-btn {
-  padding: 7px 14px;
-  border: none;
-  border-radius: 6px;
-  font-size: 14px;
-  font-weight: 600;
+.accept-btn,
+.reject-btn {
+  padding: 3px 8px;
+  border-radius: 2px;
+  font-size: 11px;
+  font-weight: bold;
   cursor: pointer;
-  transition: all 0.2s;
+  font-family: inherit;
 }
 
+/* Aceitar */
 .accept-btn {
-  background: #22c55e;
+  background: linear-gradient(#6d84b4, #4f6aa3);
+  border: 1px solid #29447e;
   color: white;
 }
 
 .accept-btn:hover {
-  background: #16a34a;
-  transform: translateY(-1px);
+  background: linear-gradient(#7b92c2, #5b76af);
 }
 
+/* Recusar */
 .reject-btn {
-  background: #ef4444;
-  color: white;
+  background: linear-gradient(#f6f7f8, #e9eaed);
+  border: 1px solid #ccd0d5;
+  color: #4b4f56;
 }
 
 .reject-btn:hover {
-  background: #dc2626;
-  transform: translateY(-1px);
+  background: #dfe3e8;
 }
 
+/* Sem notificações */
 .notif-empty {
-  padding: 40px 20px;
+  padding: 30px 20px;
   text-align: center;
-  color: #888;
-  font-size: 15px;
+  font-size: 11px;
+  color: #90949c;
+  background: #fff;
 }
 
 /* Badge vermelha */
