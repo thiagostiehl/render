@@ -29,9 +29,29 @@
       <div class="box composer">
         <h3>Atualizar status</h3>
         <form id="form-post">
-          <textarea id="post-text" placeholder="No que você está pensando?" required maxlength="280"></textarea>
+          <textarea id="post-text" placeholder="No que você está pensando?" maxlength="280"></textarea>
           <p id="post-counter" class="char-counter">0 / 280 caracteres</p>
-          <button type="submit" class="btn">Publicar</button>
+
+          <!-- Foto -->
+          <div class="composer-media-row">
+            <label class="btn btn-small composer-media-btn" title="Adicionar foto">
+              📷 Foto
+              <input type="file" id="post-image" accept="image/*" style="display:none">
+            </label>
+
+            <!-- YouTube -->
+            <input
+              type="text"
+              id="post-youtube"
+              placeholder="🎬 Link do YouTube (opcional)"
+              style="flex:1;padding:4px 7px;border:1px solid #bdc7d8;font-size:10px;font-family:inherit;border-radius:2px;"
+            >
+          </div>
+
+          <!-- Preview da imagem -->
+          <div id="post-image-preview"></div>
+
+          <button type="submit" class="btn" style="margin-top:6px">Publicar</button>
         </form>
       </div>
       <div class="box">
