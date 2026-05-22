@@ -982,3 +982,169 @@ a:hover {
 .chat-window {
   z-index: 999999 !important;
 }
+/* =======================================================
+   CHAT RETRÔ FORÇADO
+======================================================= */
+
+body {
+  overflow-x: hidden;
+}
+
+/* Sidebar online */
+
+.chat-sidebar {
+  position: fixed !important;
+
+  top: 42px !important;
+  right: 0 !important;
+
+  width: 220px !important;
+  height: calc(100vh - 42px) !important;
+
+  background: #f6f7f8 !important;
+
+  border-left: 1px solid #bfc7d8 !important;
+
+  z-index: 999999 !important;
+
+  overflow-y: auto !important;
+
+  display: block !important;
+}
+
+/* Header */
+
+.chat-sidebar-header {
+  padding: 8px !important;
+
+  background: linear-gradient(#ffffff, #eceff5) !important;
+
+  border-bottom: 1px solid #d8dfea !important;
+
+  font-size: 11px !important;
+  font-weight: bold !important;
+
+  color: #666 !important;
+}
+
+/* Usuário */
+
+.chat-user {
+  display: flex !important;
+
+  align-items: center !important;
+
+  gap: 6px !important;
+
+  padding: 6px 8px !important;
+
+  cursor: pointer !important;
+
+  border-bottom: 1px solid #ececec !important;
+
+  background: #fff !important;
+}
+
+.chat-user:hover {
+  background: #e9eff7 !important;
+}
+
+/* Avatar */
+
+.chat-user img {
+  width: 28px !important;
+  height: 28px !important;
+
+  border-radius: 2px !important;
+
+  border: 1px solid #ccc !important;
+
+  object-fit: cover !important;
+}
+
+/* Nome */
+
+.chat-user-name {
+  flex: 1 !important;
+
+  font-size: 11px !important;
+
+  color: #1d2129 !important;
+}
+
+/* Online */
+
+.online-dot {
+  width: 8px !important;
+  height: 8px !important;
+
+  background: #4ecb4e !important;
+
+  border-radius: 50% !important;
+}
+
+/* Janela */
+
+.chat-window {
+  position: fixed !important;
+
+  bottom: 0 !important;
+
+  right: 230px !important;
+
+  width: 260px !important;
+
+  background: #fff !important;
+
+  border: 1px solid #bfc7d8 !important;
+
+  box-shadow: 0 3px 8px rgba(0,0,0,0.25) !important;
+
+  z-index: 999999 !important;
+
+  display: block !important;
+}
+
+/* Header */
+
+.chat-header {
+  background: linear-gradient(#4e69a2, #3b5998) !important;
+
+  color: #fff !important;
+
+  padding: 6px 8px !important;
+
+  font-size: 11px !important;
+
+  font-weight: bold !important;
+}
+
+/* Mensagens */
+
+.chat-messages {
+  height: 220px !important;
+
+  overflow-y: auto !important;
+
+  padding: 8px !important;
+
+  background: #fff !important;
+}
+
+/* Input */
+
+.chat-input {
+  border-top: 1px solid #d8dfea !important;
+}
+
+.chat-input input {
+  width: 100% !important;
+
+  border: none !important;
+
+  padding: 8px !important;
+
+  font-size: 11px !important;
+
+  outline: none !important;
+}
