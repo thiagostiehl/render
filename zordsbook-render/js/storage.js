@@ -228,6 +228,19 @@ async function createCommunity(name, description, creatorId) {
   return data;
 }
 
+async function deleteCommunity(communityId) {
+  const sb = getSupabase();
+
+  const { error } = await sb
+    .from("communities")
+    .delete()
+    .eq("id", communityId);
+
+  if (error) throw error;
+
+  return true;
+}
+
 async function joinCommunity(communityId, userId) {
   const sb = getSupabase();
   const { error } = await sb.from("community_members").insert({ community_id: communityId, user_id: userId });
