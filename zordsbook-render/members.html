@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Membros — ZordsBook</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div id="topbar"></div>
+
+  <main class="page-wrap">
+    <aside class="sidebar">
+      <div class="box mini-profile" id="mini-profile"></div>
+      <div class="box">
+        <h3>Filtrar</h3>
+        <input id="search-members" type="text" placeholder="Buscar membro..." style="width:100%;padding:5px 7px;border:1px solid #bdc7d8;font-size:11px;font-family:inherit">
+      </div>
+    </aside>
+
+    <section class="feed">
+      <div class="box">
+        <h3>Solicitações de amizade</h3>
+        <div id="pending-requests"><p style="color:#90949c;font-size:11px">Nenhuma solicitação pendente.</p></div>
+      </div>
+      <div class="box">
+        <h3>Todos os membros</h3>
+        <div id="members-grid" class="members-grid"></div>
+      </div>
+    </section>
+
+    <aside class="rightbar">
+      <div class="box">
+        <h3>Meus amigos</h3>
+        <ul class="friend-list" id="my-friends-list"></ul>
+      </div>
+    </aside>
+  </main>
+
+  <p class="footer-note">ZordsBook · só pra nós</p>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/config.js"></script>
+  <script src="js/supabase-client.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/members.js"></script>
+</body>
+</html>

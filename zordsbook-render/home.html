@@ -13,21 +13,13 @@
     <aside class="sidebar">
       <div class="box mini-profile" id="mini-profile"></div>
       <div class="box">
-        <h3>Atalhos</h3>
-        <p><a href="profile.html">Meu perfil</a></p>
-        <p style="margin-top:6px"><a href="home.html">Mural de notícias</a></p>
-      </div>
-      <div class="box">
-        <h3>Membros do grupo</h3>
+        <h3>Meus amigos</h3>
         <ul class="friend-list" id="friend-list"></ul>
+        <p style="margin-top:8px"><a href="members.html" style="font-size:10px">Ver todos os membros →</a></p>
       </div>
     </aside>
 
     <section class="feed">
-      <div class="box">
-        <h3>Comunidade</h3>
-        <div id="community-tabs" class="community-tabs"></div>
-      </div>
       <div class="box composer">
         <h3>Atualizar status</h3>
         <form id="form-post">
@@ -37,33 +29,27 @@
         </form>
       </div>
       <div class="box">
-        <h3 id="feed-title">Mural de notícias</h3>
+        <h3>Mural de amigos</h3>
         <div id="feed-posts"></div>
       </div>
     </section>
 
     <aside class="rightbar">
-      <div class="box">
-        <h3>Quem está online</h3>
-        <div class="online-now-playing">
-          <div class="online-section" id="suggestions"></div>
-          <div class="now-playing-section" id="now-playing-status">
-            <h4>Agora tocando</h4>
-            <p class="now-playing-loading">Aguardando status...</p>
-          </div>
-        </div>
+      <div class="now-playing-section" id="now-playing-status">
+        <h4>🎵 Agora tocando</h4>
+        <p class="now-playing-loading">Aguardando...</p>
       </div>
+      <div id="friends-playing"></div>
       <div class="box">
-        <h3>Anúncio</h3>
-        <p style="color:#90949c;font-size:10px">
-          ProForma: Mensalidades à partir de 98,00
-          Cuca Da Marcinha - Explosão de Sabores!
-        </p>
+        <h3>Atalhos</h3>
+        <p><a href="communities.html">🏘 Comunidades</a></p>
+        <p style="margin-top:5px"><a href="members.html">👥 Membros</a></p>
+        <p style="margin-top:5px"><a href="profile.html">👤 Meu perfil</a></p>
       </div>
     </aside>
   </main>
 
-  <p class="footer-note">ZordsBook · Comunidade na nuvem</p>
+  <p class="footer-note">ZordsBook · só pra nós</p>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/config.js"></script>
