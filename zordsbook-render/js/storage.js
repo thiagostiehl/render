@@ -641,5 +641,3 @@ function renderNotifDropdown(dropdown, notifs) {
   });
 }
 
-
-}
