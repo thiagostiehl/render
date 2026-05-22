@@ -155,10 +155,40 @@ function getMyFriendIds(friendships, myId) {
 
 async function sendFriendRequest(toUserId, fromUserId) {
   const sb = getSupabase();
-  const { error } = await sb.from("friendships").insert({ requester_id: fromUserId, addressee_id: toUserId });
-  if (error) throw error;
-  // Notificação
-  await sb.from("notifications").insert({ user_id: toUserId, actor_id: fromUserId, kind: "friend_request" }).catch(() => {});
+  
+  try {
+    // Cria a solicitação de amizade
+    const { error: friendError } = await sb
+      .from("friendships")
+      .insert({ 
+        requester_id: fromUserId, 
+        addressee_id: toUserId,
+        status: "pending" 
+      });
+
+    if (friendError) throw friendError;
+
+    // Cria a notificação
+    const { error: notifError } = await sb
+      .from("notifications")
+      .insert({ 
+        user_id: toUserId, 
+        actor_id: fromUserId, 
+        kind: "friend_request",
+        read: false 
+      });
+
+    if (notifError) {
+      console.warn("Solicitação enviada, mas notificação falhou:", notifError);
+    } else {
+      console.log("✅ Solicitação + Notificação enviadas com sucesso!");
+    }
+
+    return true;
+  } catch (err) {
+    console.error("Erro ao enviar pedido de amizade:", err);
+    throw err;
+  }
 }
 
 async function acceptFriendRequest(friendshipId, actorId, myId) {
