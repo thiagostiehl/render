@@ -35,6 +35,30 @@
       : `<li style="color:#90949c;font-size:10px">Adicione amigos na aba <a href="members.html">Membros</a>!</li>`;
   }
 
+  // ── Minhas comunidades (rightbar) ────────────────────────────────────────
+  function renderMyCommunities() {
+    const container = document.getElementById("home-my-communities");
+    if (!container || !allData) return;
+    const myComms = allData.communities.filter(c =>
+      allData.communityMembers.some(m => m.community_id === c.id && m.user_id === currentUser.id)
+    ).slice(0, 6); // máximo 6 na home
+    if (!myComms.length) {
+      container.innerHTML = `<p style="color:#90949c;font-size:10px">Você não participa de nenhuma comunidade ainda.</p>`;
+      return;
+    }
+    container.innerHTML = myComms.map(c => `
+      <div class="community-orkut-card">
+        <a href="communities.html?id=${c.id}">
+          <div class="community-orkut-icon">${c.name.charAt(0).toUpperCase()}</div>
+        </a>
+        <div class="community-orkut-info">
+          <p class="community-orkut-name">
+            <a href="communities.html?id=${c.id}">${c.name}</a>
+          </p>
+        </div>
+      </div>`).join("");
+  }
+
   // ── Now Playing – eu ──────────────────────────────────────────────────────
   function renderMyNowPlaying(np) {
     const container = document.getElementById("now-playing-status");
@@ -113,6 +137,7 @@
   async function refreshFeed() {
     allData = await fetchCommunityData();
     renderSidebar();
+    renderMyCommunities();
 
     const friendIds = new Set(getMyFriendIds(allData.friendships, currentUser.id));
     friendIds.add(currentUser.id); // meus próprios posts também aparecem
