@@ -89,11 +89,12 @@ async function updatePassword(newPassword) {
 
 async function fetchCommunityData() {
   const sb = getSupabase();
-  const [profilesRes, communitiesRes, postsRes, likesRes, commentsRes, testimonialsRes, membersRes, friendsRes] = await Promise.all([
+  const [profilesRes, communitiesRes, postsRes, likesRes, dislikesRes, commentsRes, testimonialsRes, membersRes, friendsRes] = await Promise.all([
     sb.from("profiles").select("*").order("name"),
     sb.from("communities").select("*").order("name"),
     sb.from("posts").select("*").order("created_at", { ascending: false }),
     sb.from("post_likes").select("*"),
+    sb.from("post_dislikes").select("*"),
     sb.from("comments").select("*").order("created_at", { ascending: true }),
     sb.from("testimonials").select("*").order("created_at", { ascending: false }),
     sb.from("community_members").select("*"),
@@ -116,8 +117,11 @@ async function fetchCommunityData() {
 
   const posts = (postsRes.data || []).map(post => ({
     id: post.id, userId: post.user_id, communityId: post.community_id, text: post.text,
+    imageUrl: post.image_url || null,
+    youtubeId: post.youtube_id || null,
     createdAt: new Date(post.created_at).getTime(),
     likes: (likesRes.data || []).filter(l => l.post_id === post.id).map(l => l.user_id),
+    dislikes: (dislikesRes.data || []).filter(d => d.post_id === post.id).map(d => d.user_id),
     comments: (commentsRes.data || []).filter(c => c.post_id === post.id).map(c => ({
       userId: c.user_id, text: c.text, createdAt: new Date(c.created_at).getTime(),
     })),
@@ -287,9 +291,15 @@ async function leaveCommunity(communityId, userId) {
 
 // ── Posts ─────────────────────────────────────────────────────────────────────
 
-async function createPost(userId, text, communityId) {
+async function createPost(userId, text, communityId, imageUrl, youtubeId) {
   const sb = getSupabase();
-  const { error } = await sb.from("posts").insert({ user_id: userId, text, community_id: communityId || null });
+  const { error } = await sb.from("posts").insert({
+    user_id: userId,
+    text,
+    community_id: communityId || null,
+    image_url: imageUrl || null,
+    youtube_id: youtubeId || null,
+  });
   if (error) throw error;
 }
 
@@ -299,7 +309,43 @@ async function toggleLike(postId, userId) {
   if (existing) {
     await sb.from("post_likes").delete().eq("post_id", postId).eq("user_id", userId);
   } else {
+    // Remove dislike se houver (não pode ter os dois)
+    await sb.from("post_dislikes").delete().eq("post_id", postId).eq("user_id", userId);
     await sb.from("post_likes").insert({ post_id: postId, user_id: userId });
+    // Notifica o autor do post
+    const { data: post } = await sb.from("posts").select("user_id").eq("id", postId).maybeSingle();
+    if (post && post.user_id !== userId) {
+      await sb.from("notifications").insert({
+        user_id: post.user_id,
+        actor_id: userId,
+        kind: "like",
+        post_id: postId,
+        read: false,
+      }).catch(() => {});
+    }
+  }
+}
+
+async function toggleDislike(postId, userId) {
+  const sb = getSupabase();
+  const { data: existing } = await sb.from("post_dislikes").select("*").eq("post_id", postId).eq("user_id", userId).maybeSingle();
+  if (existing) {
+    await sb.from("post_dislikes").delete().eq("post_id", postId).eq("user_id", userId);
+  } else {
+    // Remove like se houver (não pode ter os dois)
+    await sb.from("post_likes").delete().eq("post_id", postId).eq("user_id", userId);
+    await sb.from("post_dislikes").insert({ post_id: postId, user_id: userId });
+    // Notifica o autor do post
+    const { data: post } = await sb.from("posts").select("user_id").eq("id", postId).maybeSingle();
+    if (post && post.user_id !== userId) {
+      await sb.from("notifications").insert({
+        user_id: post.user_id,
+        actor_id: userId,
+        kind: "dislike",
+        post_id: postId,
+        read: false,
+      }).catch(() => {});
+    }
   }
 }
 
@@ -337,6 +383,21 @@ async function uploadProfileImage(userId, file, kind) {
     else cachedUser.avatar = publicUrl;
   }
   return publicUrl;
+}
+
+
+async function uploadPostImage(userId, file) {
+  const sb = getSupabase();
+  const maxMb = 5;
+  if (file.size > maxMb * 1024 * 1024) throw new Error(`Imagem muito grande. Máximo ${maxMb} MB.`);
+  if (!file.type.startsWith("image/")) throw new Error("Escolha um arquivo de imagem.");
+  const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
+  const safeExt = ["jpg","jpeg","png","webp","gif"].includes(ext) ? ext : "jpg";
+  const path = `posts/${userId}/${Date.now()}.${safeExt}`;
+  const { error: upErr } = await sb.storage.from("post-images").upload(path, file, { upsert: false, cacheControl: "3600" });
+  if (upErr) throw upErr;
+  const { data: urlData } = sb.storage.from("post-images").getPublicUrl(path);
+  return urlData.publicUrl;
 }
 
 async function createTestimonial(profileUserId, authorUserId, text) {
@@ -476,6 +537,33 @@ function renderNotifDropdown(dropdown, notifs, currentUser) {
           <img src="${actorAvatar}" class="notif-avatar" alt="">
           <div class="notif-content">
             <strong>${actorName}</strong> aceitou seu pedido de amizade
+          </div>
+        </div>`;
+    }
+    if (notif.kind === "like") {
+      return `
+        <div class="notification-item">
+          <img src="${actorAvatar}" class="notif-avatar" alt="">
+          <div class="notif-content">
+            👍 <strong>${actorName}</strong> curtiu sua publicação
+          </div>
+        </div>`;
+    }
+    if (notif.kind === "dislike") {
+      return `
+        <div class="notification-item">
+          <img src="${actorAvatar}" class="notif-avatar" alt="">
+          <div class="notif-content">
+            👎 <strong>${actorName}</strong> descurtiu sua publicação
+          </div>
+        </div>`;
+    }
+    if (notif.kind === "testimonial") {
+      return `
+        <div class="notification-item">
+          <img src="${actorAvatar}" class="notif-avatar" alt="">
+          <div class="notif-content">
+            💬 <strong>${actorName}</strong> deixou um depoimento no seu perfil
           </div>
         </div>`;
     }
