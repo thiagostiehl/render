@@ -978,4 +978,7 @@ a:hover {
   display: block !important;
 }
 
-
+.chat-sidebar,
+.chat-window {
+  z-index: 999999 !important;
+}
