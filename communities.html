@@ -29,15 +29,15 @@
     </aside>
 
     <section class="feed">
-      <!-- Lista de comunidades ou view de uma comunidade -->
+      <!-- Lista de comunidades em grade -->
       <div id="community-view">
         <div class="box">
           <h3>Minhas comunidades</h3>
-          <div id="my-communities"></div>
+          <div id="my-communities" class="community-grid"></div>
         </div>
         <div class="box">
           <h3>Todas as comunidades</h3>
-          <div id="all-communities"></div>
+          <div id="all-communities" class="community-grid"></div>
         </div>
       </div>
 
@@ -64,7 +64,10 @@
     <aside class="rightbar">
       <div class="box">
         <h3>Membros da comunidade</h3>
-        <ul class="friend-list" id="comm-members-list"><li style="color:#90949c;font-size:10px">Selecione uma comunidade.</li></ul>
+        <!-- Grade de membros estilo Orkut -->
+        <div class="members-orkut-grid" id="comm-members-grid">
+          <p style="color:#90949c;font-size:10px">Selecione uma comunidade.</p>
+        </div>
       </div>
     </aside>
   </main>
