@@ -1,29 +1,29 @@
 /**
- * chat.js — Barra de amigos estilo Facebook clássico
- * com presença real via Supabase Realtime Presence
+ * chat.js — Chat estilo MSN Messenger
  * Depende de: supabase-client.js (getSupabase)
  */
 
 (async function () {
   const supabase = getSupabase();
 
-  // ── Usuário atual ────────────────────────────────────────────
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return;
 
-  // Busca o perfil do usuário logado
   const { data: myProfile } = await supabase
     .from("profiles")
     .select("name, avatar_url")
     .eq("id", user.id)
     .single();
 
-  const myName = myProfile?.name || "Usuário";
+  const myName   = myProfile?.name   || "Você";
+  const myAvatar = myProfile?.avatar_url
+    ? myProfile.avatar_url
+    : `https://ui-avatars.com/api/?name=${encodeURIComponent(myName)}&size=30&background=1a6fc4&color=fff`;
 
-  // ── Som de notificação ───────────────────────────────────────
+  // ── Som ──────────────────────────────────────────────────────
   function playNotificationSound() {
     let sound = document.getElementById("notifSound");
-    if (!sound || !sound.src) {
+    if (!sound || !sound.currentSrc) {
       sound = new Audio("https://zrtcrowfyzbleiilxcej.supabase.co/storage/v1/object/public/assets/msn.mp3");
     }
     sound.volume = 0.5;
@@ -31,13 +31,13 @@
     sound.play().catch(() => {});
   }
 
-  // ── Cria a barra lateral ─────────────────────────────────────
+  // ── Barra lateral ────────────────────────────────────────────
   const sidebar = document.createElement("div");
   sidebar.className = "chat-sidebar";
   sidebar.id = "chat-sidebar";
   sidebar.innerHTML = `
     <div class="chat-sidebar-header" id="chat-sidebar-toggle">
-      <span>● Chat</span>
+      <span>💬 Contatos</span>
       <span class="chat-sidebar-toggle">▼</span>
     </div>
     <div class="chat-sidebar-body" id="chat-sidebar-body">
@@ -46,7 +46,6 @@
   `;
   document.body.appendChild(sidebar);
 
-  // Recolher / expandir
   let sidebarOpen = true;
   document.getElementById("chat-sidebar-toggle").addEventListener("click", () => {
     const body = document.getElementById("chat-sidebar-body");
@@ -55,7 +54,7 @@
     sidebar.querySelector(".chat-sidebar-toggle").textContent = sidebarOpen ? "▼" : "▲";
   });
 
-  // ── Lista de todos os usuários ───────────────────────────────
+  // ── Perfis ───────────────────────────────────────────────────
   let allProfiles = [];
 
   async function loadUsers() {
@@ -67,41 +66,58 @@
 
     if (error || !profiles) return;
     allProfiles = profiles;
-    renderUserList([]);  // começa sem ninguém online
+    renderUserList([]);
   }
 
-  // ── Renderiza lista com indicador de online/offline ──────────
   function renderUserList(onlineIds) {
     const body = document.getElementById("chat-sidebar-body");
     if (!allProfiles.length) {
-      body.innerHTML = `<p class="chat-empty">Nenhum usuário encontrado.</p>`;
+      body.innerHTML = `<p class="chat-empty">Nenhum contato encontrado.</p>`;
       return;
     }
 
-    // Ordena: online primeiro, depois offline
     const sorted = [...allProfiles].sort((a, b) => {
-      const aOnline = onlineIds.includes(a.id) ? 0 : 1;
-      const bOnline = onlineIds.includes(b.id) ? 0 : 1;
-      return aOnline - bOnline || a.name?.localeCompare(b.name);
+      const aOn = onlineIds.includes(a.id) ? 0 : 1;
+      const bOn = onlineIds.includes(b.id) ? 0 : 1;
+      return aOn - bOn || (a.name || "").localeCompare(b.name || "");
     });
 
+    const onlineCount  = sorted.filter(p => onlineIds.includes(p.id)).length;
+    const offlineCount = sorted.length - onlineCount;
+
     body.innerHTML = "";
+
+    if (onlineCount > 0) {
+      const lbl = document.createElement("div");
+      lbl.className = "chat-online-label";
+      lbl.textContent = `Online (${onlineCount})`;
+      body.appendChild(lbl);
+    }
+
+    let offlineLabelAdded = false;
+
     sorted.forEach(profile => {
       const isOnline = onlineIds.includes(profile.id);
+
+      if (!isOnline && !offlineLabelAdded && offlineCount > 0) {
+        const lbl = document.createElement("div");
+        lbl.className = "chat-online-label";
+        lbl.textContent = `Offline (${offlineCount})`;
+        body.appendChild(lbl);
+        offlineLabelAdded = true;
+      }
+
+      const avatarSrc = profile.avatar_url
+        ? profile.avatar_url
+        : `https://ui-avatars.com/api/?name=${encodeURIComponent(profile.name || "U")}&size=36&background=1a6fc4&color=fff`;
+
       const div = document.createElement("div");
       div.className = "chat-user";
-      div.dataset.userId   = profile.id;
-      div.dataset.userName = profile.name || "Usuário";
-
-      const avatar = profile.avatar_url
-        ? `<img src="${profile.avatar_url}" alt="${profile.name}">`
-        : `<img src="https://ui-avatars.com/api/?name=${encodeURIComponent(profile.name || "U")}&size=28&background=8b9dc3&color=fff" alt="${profile.name}">`;
-
-      const dot = isOnline
-        ? `<span class="online-dot"></span>`
-        : `<span class="online-dot" style="background:#ccc;box-shadow:none;"></span>`;
-
-      div.innerHTML = `${avatar}<span class="chat-user-name">${profile.name || "Usuário"}</span>${dot}`;
+      div.innerHTML = `
+        <img src="${avatarSrc}" alt="${profile.name}">
+        <span class="chat-user-name">${profile.name || "Usuário"}</span>
+        <span class="online-dot ${isOnline ? "is-online" : "is-offline"}"></span>
+      `;
       div.addEventListener("click", () => openChatWindow(profile.id, profile.name, profile.avatar_url));
       body.appendChild(div);
     });
@@ -109,43 +125,35 @@
 
   await loadUsers();
 
-  // ── Presence — rastreia quem está online ─────────────────────
+  // ── Presence ─────────────────────────────────────────────────
   const presenceChannel = supabase.channel("online-users", {
     config: { presence: { key: user.id } }
   });
 
+  function getOnlineIds() {
+    return Object.keys(presenceChannel.presenceState()).filter(id => id !== user.id);
+  }
+
   presenceChannel
-    .on("presence", { event: "sync" }, () => {
-      const state = presenceChannel.presenceState();
-      const onlineIds = Object.keys(state).filter(id => id !== user.id);
-      renderUserList(onlineIds);
-    })
-    .on("presence", { event: "join" }, ({ key }) => {
-      const state = presenceChannel.presenceState();
-      const onlineIds = Object.keys(state).filter(id => id !== user.id);
-      renderUserList(onlineIds);
-    })
-    .on("presence", { event: "leave" }, ({ key }) => {
-      const state = presenceChannel.presenceState();
-      const onlineIds = Object.keys(state).filter(id => id !== user.id);
-      renderUserList(onlineIds);
-    })
+    .on("presence", { event: "sync"  }, () => renderUserList(getOnlineIds()))
+    .on("presence", { event: "join"  }, () => renderUserList(getOnlineIds()))
+    .on("presence", { event: "leave" }, () => renderUserList(getOnlineIds()))
     .subscribe(async (status) => {
       if (status === "SUBSCRIBED") {
         await presenceChannel.track({ user_id: user.id, name: myName, online_at: new Date().toISOString() });
       }
     });
 
-  // ── Janelas abertas ──────────────────────────────────────────
+  // ── Janelas ──────────────────────────────────────────────────
   const openWindows = {};
-  const windowOffset = 210;
-  const windowWidth  = 270;
+  const windowOffset = 258;
+  const windowWidth  = 328;
 
   function openChatWindow(receiverId, receiverName, receiverAvatar) {
     if (openWindows[receiverId]) {
       const win = openWindows[receiverId];
       win.querySelector(".chat-messages").style.display = "flex";
-      win.querySelector(".chat-input").style.display = "flex";
+      win.querySelector(".chat-input").style.display    = "flex";
       win.querySelector(".chat-input input").focus();
       const badge = win.querySelector(".chat-notif-badge");
       if (badge) badge.remove();
@@ -155,49 +163,55 @@
     const index    = Object.keys(openWindows).length;
     const rightPos = windowOffset + index * windowWidth;
 
+    const avatarSrc = receiverAvatar
+      ? receiverAvatar
+      : `https://ui-avatars.com/api/?name=${encodeURIComponent(receiverName || "U")}&size=30&background=1a6fc4&color=fff`;
+
     const win = document.createElement("div");
     win.className = "chat-window";
     win.style.right = rightPos + "px";
-
     win.innerHTML = `
       <div class="chat-header">
-        <span>${receiverName || "Chat"}</span>
-        <span class="chat-close" title="Fechar">×</span>
+        <div class="chat-header-info">
+          <img class="chat-header-avatar" src="${avatarSrc}" alt="${receiverName}">
+          <span class="chat-header-name">${receiverName || "Chat"}</span>
+        </div>
+        <span class="chat-close" title="Fechar">✕</span>
       </div>
+      <div class="chat-msn-stripe"></div>
       <div class="chat-messages" id="chat-msgs-${receiverId}"></div>
       <div class="chat-input">
-        <input type="text" placeholder="Digite uma mensagem..." autocomplete="off">
+        <input type="text" placeholder="Digite uma mensagem e pressione Enter..." autocomplete="off">
+        <span class="chat-send-hint">Enter ↵</span>
       </div>
     `;
 
     document.body.appendChild(win);
     openWindows[receiverId] = win;
 
-    // Fechar
     win.querySelector(".chat-close").addEventListener("click", (e) => {
       e.stopPropagation();
       closeChatWindow(receiverId);
     });
 
-    // Minimizar
     let minimized = false;
     win.querySelector(".chat-header").addEventListener("click", (e) => {
       if (e.target.classList.contains("chat-close")) return;
       minimized = !minimized;
       win.querySelector(".chat-messages").style.display = minimized ? "none" : "flex";
       win.querySelector(".chat-input").style.display    = minimized ? "none" : "flex";
+      win.querySelector(".chat-msn-stripe").style.display = minimized ? "none" : "block";
       const badge = win.querySelector(".chat-notif-badge");
       if (!minimized && badge) badge.remove();
     });
 
-    // Enviar com Enter
     const inputEl = win.querySelector(".chat-input input");
     inputEl.addEventListener("keydown", async (e) => {
       if (e.key !== "Enter") return;
       const text = inputEl.value.trim();
       if (!text) return;
       inputEl.value = "";
-      appendMessage(receiverId, text, true);
+      appendMessage(receiverId, text, true, myName);
       const { error } = await supabase.from("messages").insert({
         sender_id:   user.id,
         receiver_id: receiverId,
@@ -233,48 +247,61 @@
       .limit(50);
 
     if (error) { console.error("Erro ao carregar histórico:", error); return; }
-    data.forEach(msg => appendMessage(receiverId, msg.message, msg.sender_id === user.id));
+
+    // Busca nome do outro
+    const other = allProfiles.find(p => p.id === receiverId);
+    const otherName = other?.name || "Usuário";
+
+    data.forEach(msg => {
+      const isOwn = msg.sender_id === user.id;
+      appendMessage(receiverId, msg.message, isOwn, isOwn ? myName : otherName);
+    });
   }
 
-  // ── Renderizar bolha ─────────────────────────────────────────
-  function appendMessage(receiverId, text, isOwn) {
+  // ── Renderizar mensagem ──────────────────────────────────────
+  function appendMessage(receiverId, text, isOwn, senderName) {
     const container = document.getElementById(`chat-msgs-${receiverId}`);
     if (!container) return;
-    const div = document.createElement("div");
-    div.className = `chat-msg ${isOwn ? "chat-msg-own" : "chat-msg-other"}`;
-    div.textContent = text;
-    container.appendChild(div);
+
+    const label = document.createElement("div");
+    label.className = `chat-msg-label ${isOwn ? "chat-msg-label-own" : ""}`;
+    label.textContent = senderName || (isOwn ? "Você" : "Usuário");
+
+    const bubble = document.createElement("div");
+    bubble.className = `chat-msg ${isOwn ? "chat-msg-own" : "chat-msg-other"}`;
+    bubble.textContent = text;
+
+    container.appendChild(label);
+    container.appendChild(bubble);
     container.scrollTop = container.scrollHeight;
   }
 
-  // ── Notificação ao receber mensagem ──────────────────────────
+  // ── Notificação ──────────────────────────────────────────────
   function notifyIncoming(senderId, senderName, senderAvatar, text) {
     playNotificationSound();
 
     if (openWindows[senderId]) {
-      const win = openWindows[senderId];
+      const win  = openWindows[senderId];
       const msgs = win.querySelector(".chat-messages");
-      appendMessage(senderId, text, false);
+      appendMessage(senderId, text, false, senderName);
       if (msgs.style.display === "none") {
-        // minimizada: mostra badge
-        const header = win.querySelector(".chat-header span:first-child");
+        const header = win.querySelector(".chat-header-name");
         if (!win.querySelector(".chat-notif-badge")) {
           const badge = document.createElement("span");
           badge.className = "chat-notif-badge";
-          badge.style.cssText = "background:#c0392b;color:#fff;border-radius:50%;font-size:10px;padding:1px 5px;margin-left:6px;";
-          badge.textContent = "1";
+          badge.style.cssText = "background:#e03030;color:#fff;border-radius:50%;font-size:10px;padding:1px 5px;margin-left:6px;";
+          badge.textContent = "●";
           header.appendChild(badge);
         }
       }
       return;
     }
 
-    // Janela fechada: abre automaticamente
     openChatWindow(senderId, senderName, senderAvatar);
-    setTimeout(() => appendMessage(senderId, text, false), 80);
+    setTimeout(() => appendMessage(senderId, text, false, senderName), 80);
   }
 
-  // ── Realtime — escuta mensagens recebidas ────────────────────
+  // ── Realtime ─────────────────────────────────────────────────
   supabase
     .channel(`inbox-${user.id}`)
     .on("postgres_changes", {
@@ -284,15 +311,13 @@
       filter: `receiver_id=eq.${user.id}`
     }, async payload => {
       const senderId = payload.new.sender_id;
-      const text     = payload.new.message;
-
       const { data: profile } = await supabase
         .from("profiles")
         .select("name, avatar_url")
         .eq("id", senderId)
         .single();
 
-      notifyIncoming(senderId, profile?.name || "Usuário", profile?.avatar_url || null, text);
+      notifyIncoming(senderId, profile?.name || "Usuário", profile?.avatar_url || null, payload.new.message);
     })
     .subscribe();
 
