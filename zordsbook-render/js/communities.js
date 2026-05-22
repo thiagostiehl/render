@@ -23,19 +23,18 @@
   function communityCard(c) {
     const memberCount = allData.communityMembers.filter(m => m.community_id === c.id).length;
     const member = isMember(c.id);
-    return `<div class="community-card" style="display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-bottom:1px solid #e9eaed">
-      <div style="width:48px;height:48px;border-radius:3px;background:#3b5998;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:#fff;font-size:20px;font-weight:bold">
-        ${c.name.charAt(0).toUpperCase()}
-      </div>
-      <div style="flex:1;min-width:0">
-        <p style="font-weight:bold;font-size:12px;margin:0">
-          <a href="#" class="open-community" data-id="${c.id}" style="color:#365899">${c.name}</a>
+    const initial = c.name.charAt(0).toUpperCase();
+    return `<div class="community-orkut-card">
+      <a href="#" class="open-community" data-id="${c.id}">
+        <div class="community-orkut-icon">${initial}</div>
+      </a>
+      <div class="community-orkut-info">
+        <p class="community-orkut-name">
+          <a href="#" class="open-community" data-id="${c.id}">${c.name}</a>
         </p>
-        <p style="font-size:10px;color:#90949c;margin:2px 0">${c.description || "Sem descrição"}</p>
-        <p style="font-size:10px;color:#90949c;margin:2px 0">${memberCount} membro${memberCount !== 1 ? "s" : ""}</p>
+        <p class="community-orkut-meta">${memberCount} membro${memberCount !== 1 ? "s" : ""}</p>
         ${member
-          ? `<button class="btn btn-small btn-leave" data-id="${c.id}" style="margin-top:4px;background:linear-gradient(#d9534f,#c9302c);border-color:#ac2925">Sair</button>
-             <button class="btn btn-small open-community" data-id="${c.id}" style="margin-top:4px;margin-left:4px">Ver</button>`
+          ? `<button class="btn btn-small btn-leave" data-id="${c.id}" style="background:linear-gradient(#d9534f,#c9302c);border-color:#ac2925;margin-top:4px">Sair</button>`
           : `<button class="btn btn-small btn-join" data-id="${c.id}" style="margin-top:4px">Participar</button>`
         }
       </div>
@@ -112,9 +111,18 @@
     document.getElementById("comm-feed-title").textContent = `Publicações em ${c.name}`;
 
     const members = allData.communityMembers.filter(m => m.community_id === communityId).map(m => allData.userById[m.user_id]).filter(Boolean);
-    document.getElementById("comm-members-list").innerHTML = members.length
-      ? members.map(u => `<li><img src="${avatarUrl(u)}" alt=""><a href="profile.html?user=${u.id}">${u.name}</a></li>`).join("")
-      : `<li style="color:#90949c;font-size:10px">Nenhum membro ainda.</li>`;
+    const membersGrid = document.getElementById("comm-members-grid");
+    if (membersGrid) {
+      membersGrid.innerHTML = members.length
+        ? members.map(u => `
+            <div class="member-orkut-cell">
+              <a href="profile.html?user=${u.id}">
+                <img src="${avatarUrl(u)}" alt="${u.name}">
+              </a>
+              <a href="profile.html?user=${u.id}" class="member-orkut-name">${u.name}</a>
+            </div>`).join("")
+        : `<p style="color:#90949c;font-size:10px">Nenhum membro ainda.</p>`;
+    }
 
     renderCommunityPosts();
 
@@ -194,5 +202,3 @@
 
   if (urlComm && allData.communityById[urlComm]) openCommunity(urlComm);
 })();
-
-
