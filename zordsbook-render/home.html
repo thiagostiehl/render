@@ -7,18 +7,24 @@
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
+
   <div id="topbar"></div>
 
   <main class="page-wrap">
+
+    <!-- SIDEBAR -->
     <aside class="sidebar">
       <div class="box mini-profile" id="mini-profile"></div>
       <div class="box">
         <h3>Meus amigos</h3>
         <ul class="friend-list" id="friend-list"></ul>
-        <p style="margin-top:8px"><a href="members.html" style="font-size:10px">Ver todos os membros →</a></p>
+        <p style="margin-top:8px">
+          <a href="members.html" style="font-size:10px">Ver todos os membros →</a>
+        </p>
       </div>
     </aside>
 
+    <!-- FEED -->
     <section class="feed">
       <div class="box composer">
         <h3>Atualizar status</h3>
@@ -34,6 +40,7 @@
       </div>
     </section>
 
+    <!-- RIGHTBAR -->
     <aside class="rightbar">
       <div class="now-playing-section" id="now-playing-status">
         <h4>🎵 Agora tocando</h4>
@@ -47,15 +54,26 @@
         <p style="margin-top:5px"><a href="profile.html">👤 Meu perfil</a></p>
       </div>
     </aside>
+
   </main>
 
   <p class="footer-note">ZordsBook · só pra nós</p>
 
+  <!-- O chat é injetado pelo chat.js — não coloque nada aqui -->
+
+  <!-- Som de notificação -->
+  <audio id="notifSound" preload="auto">
+    <source src="assets/sounds/msn.mp3" type="audio/mpeg">
+  </audio>
+
+  <!-- SCRIPTS -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/config.js"></script>
   <script src="js/supabase-client.js"></script>
   <script src="js/storage.js"></script>
   <script src="js/posts.js"></script>
   <script src="js/home.js"></script>
+  <script src="js/chat.js"></script>
+
 </body>
 </html>
