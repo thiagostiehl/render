@@ -1,5 +1,6 @@
 /**
  * chat.js — Barra de amigos estilo Facebook clássico
+ * com presença real via Supabase Realtime Presence
  * Depende de: supabase-client.js (getSupabase)
  */
 
@@ -10,11 +11,18 @@
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return;
 
+  // Busca o perfil do usuário logado
+  const { data: myProfile } = await supabase
+    .from("profiles")
+    .select("name, avatar_url")
+    .eq("id", user.id)
+    .single();
+
+  const myName = myProfile?.name || "Usuário";
+
   // ── Som de notificação ───────────────────────────────────────
   function playNotificationSound() {
-    // Tenta o elemento existente no HTML
     let sound = document.getElementById("notifSound");
-    // Se não achou ou não tem source, cria um novo via URL absoluta
     if (!sound || !sound.src) {
       sound = new Audio("https://zrtcrowfyzbleiilxcej.supabase.co/storage/v1/object/public/assets/msn.mp3");
     }
@@ -47,7 +55,9 @@
     sidebar.querySelector(".chat-sidebar-toggle").textContent = sidebarOpen ? "▼" : "▲";
   });
 
-  // ── Carrega todos os usuários (sem bolinha, só lista) ────────
+  // ── Lista de todos os usuários ───────────────────────────────
+  let allProfiles = [];
+
   async function loadUsers() {
     const { data: profiles, error } = await supabase
       .from("profiles")
@@ -55,15 +65,29 @@
       .neq("id", user.id)
       .order("name");
 
-    const body = document.getElementById("chat-sidebar-body");
+    if (error || !profiles) return;
+    allProfiles = profiles;
+    renderUserList([]);  // começa sem ninguém online
+  }
 
-    if (error || !profiles || profiles.length === 0) {
+  // ── Renderiza lista com indicador de online/offline ──────────
+  function renderUserList(onlineIds) {
+    const body = document.getElementById("chat-sidebar-body");
+    if (!allProfiles.length) {
       body.innerHTML = `<p class="chat-empty">Nenhum usuário encontrado.</p>`;
       return;
     }
 
+    // Ordena: online primeiro, depois offline
+    const sorted = [...allProfiles].sort((a, b) => {
+      const aOnline = onlineIds.includes(a.id) ? 0 : 1;
+      const bOnline = onlineIds.includes(b.id) ? 0 : 1;
+      return aOnline - bOnline || a.name?.localeCompare(b.name);
+    });
+
     body.innerHTML = "";
-    profiles.forEach(profile => {
+    sorted.forEach(profile => {
+      const isOnline = onlineIds.includes(profile.id);
       const div = document.createElement("div");
       div.className = "chat-user";
       div.dataset.userId   = profile.id;
@@ -73,16 +97,44 @@
         ? `<img src="${profile.avatar_url}" alt="${profile.name}">`
         : `<img src="https://ui-avatars.com/api/?name=${encodeURIComponent(profile.name || "U")}&size=28&background=8b9dc3&color=fff" alt="${profile.name}">`;
 
-      div.innerHTML = `
-        ${avatar}
-        <span class="chat-user-name">${profile.name || "Usuário"}</span>
-      `;
+      const dot = isOnline
+        ? `<span class="online-dot"></span>`
+        : `<span class="online-dot" style="background:#ccc;box-shadow:none;"></span>`;
+
+      div.innerHTML = `${avatar}<span class="chat-user-name">${profile.name || "Usuário"}</span>${dot}`;
       div.addEventListener("click", () => openChatWindow(profile.id, profile.name, profile.avatar_url));
       body.appendChild(div);
     });
   }
 
   await loadUsers();
+
+  // ── Presence — rastreia quem está online ─────────────────────
+  const presenceChannel = supabase.channel("online-users", {
+    config: { presence: { key: user.id } }
+  });
+
+  presenceChannel
+    .on("presence", { event: "sync" }, () => {
+      const state = presenceChannel.presenceState();
+      const onlineIds = Object.keys(state).filter(id => id !== user.id);
+      renderUserList(onlineIds);
+    })
+    .on("presence", { event: "join" }, ({ key }) => {
+      const state = presenceChannel.presenceState();
+      const onlineIds = Object.keys(state).filter(id => id !== user.id);
+      renderUserList(onlineIds);
+    })
+    .on("presence", { event: "leave" }, ({ key }) => {
+      const state = presenceChannel.presenceState();
+      const onlineIds = Object.keys(state).filter(id => id !== user.id);
+      renderUserList(onlineIds);
+    })
+    .subscribe(async (status) => {
+      if (status === "SUBSCRIBED") {
+        await presenceChannel.track({ user_id: user.id, name: myName, online_at: new Date().toISOString() });
+      }
+    });
 
   // ── Janelas abertas ──────────────────────────────────────────
   const openWindows = {};
@@ -91,12 +143,10 @@
 
   function openChatWindow(receiverId, receiverName, receiverAvatar) {
     if (openWindows[receiverId]) {
-      // Janela já aberta: desminimiza e foca
       const win = openWindows[receiverId];
       win.querySelector(".chat-messages").style.display = "flex";
       win.querySelector(".chat-input").style.display = "flex";
       win.querySelector(".chat-input input").focus();
-      // Remove badge de notificação se tiver
       const badge = win.querySelector(".chat-notif-badge");
       if (badge) badge.remove();
       return;
@@ -129,14 +179,13 @@
       closeChatWindow(receiverId);
     });
 
-    // Minimizar ao clicar no header
+    // Minimizar
     let minimized = false;
     win.querySelector(".chat-header").addEventListener("click", (e) => {
       if (e.target.classList.contains("chat-close")) return;
       minimized = !minimized;
       win.querySelector(".chat-messages").style.display = minimized ? "none" : "flex";
       win.querySelector(".chat-input").style.display    = minimized ? "none" : "flex";
-      // Remove badge ao abrir
       const badge = win.querySelector(".chat-notif-badge");
       if (!minimized && badge) badge.remove();
     });
@@ -166,7 +215,6 @@
     if (!win) return;
     win.remove();
     delete openWindows[receiverId];
-    // Reposiciona restantes
     Object.values(openWindows).forEach((w, i) => {
       w.style.right = (windowOffset + i * windowWidth) + "px";
     });
@@ -199,38 +247,34 @@
     container.scrollTop = container.scrollHeight;
   }
 
-  // ── Notificação visual quando janela está minimizada/fechada ─
+  // ── Notificação ao receber mensagem ──────────────────────────
   function notifyIncoming(senderId, senderName, senderAvatar, text) {
     playNotificationSound();
 
-    // Se a janela já está aberta e visível, só adiciona a mensagem
     if (openWindows[senderId]) {
       const win = openWindows[senderId];
       const msgs = win.querySelector(".chat-messages");
-      if (msgs.style.display !== "none") {
-        appendMessage(senderId, text, false);
-        return;
-      }
-      // Minimizada: mostra badge no header
       appendMessage(senderId, text, false);
-      const header = win.querySelector(".chat-header span:first-child");
-      if (!win.querySelector(".chat-notif-badge")) {
-        const badge = document.createElement("span");
-        badge.className = "chat-notif-badge";
-        badge.style.cssText = "background:#c0392b;color:#fff;border-radius:50%;font-size:10px;padding:1px 5px;margin-left:6px;";
-        badge.textContent = "1";
-        header.appendChild(badge);
+      if (msgs.style.display === "none") {
+        // minimizada: mostra badge
+        const header = win.querySelector(".chat-header span:first-child");
+        if (!win.querySelector(".chat-notif-badge")) {
+          const badge = document.createElement("span");
+          badge.className = "chat-notif-badge";
+          badge.style.cssText = "background:#c0392b;color:#fff;border-radius:50%;font-size:10px;padding:1px 5px;margin-left:6px;";
+          badge.textContent = "1";
+          header.appendChild(badge);
+        }
       }
       return;
     }
 
-    // Janela fechada: abre automaticamente com a mensagem
+    // Janela fechada: abre automaticamente
     openChatWindow(senderId, senderName, senderAvatar);
-    // Pequeno delay para o DOM criar o container antes de inserir
-    setTimeout(() => appendMessage(senderId, text, false), 50);
+    setTimeout(() => appendMessage(senderId, text, false), 80);
   }
 
-  // ── Realtime global — escuta TODAS as mensagens recebidas ────
+  // ── Realtime — escuta mensagens recebidas ────────────────────
   supabase
     .channel(`inbox-${user.id}`)
     .on("postgres_changes", {
@@ -242,17 +286,13 @@
       const senderId = payload.new.sender_id;
       const text     = payload.new.message;
 
-      // Busca nome/avatar do remetente
       const { data: profile } = await supabase
         .from("profiles")
         .select("name, avatar_url")
         .eq("id", senderId)
         .single();
 
-      const senderName   = profile?.name   || "Usuário";
-      const senderAvatar = profile?.avatar_url || null;
-
-      notifyIncoming(senderId, senderName, senderAvatar, text);
+      notifyIncoming(senderId, profile?.name || "Usuário", profile?.avatar_url || null, text);
     })
     .subscribe();
 
