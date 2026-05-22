@@ -195,10 +195,32 @@ async function sendFriendRequest(toUserId) {
 }
 
 
-async function acceptFriendRequest(friendshipId, actorId, myId) {
+async function acceptFriendRequest(friendshipId = null, requesterId = null, myId = null) {
   const sb = getSupabase();
+  const currentUser = getCurrentUser();
   
   try {
+    let targetRequesterId = requesterId || currentUser?.id;
+
+    // Se não tiver friendshipId, buscamos pela requester + receiver
+    if (!friendshipId && targetRequesterId && myId) {
+      const { data: friendship } = await sb
+        .from("friendships")
+        .select("id")
+        .eq("requester_id", targetRequesterId)
+        .eq("addressee_id", myId)
+        .eq("status", "pending")
+        .single();
+
+      if (friendship) {
+        friendshipId = friendship.id;
+      } else {
+        throw new Error("Solicitação de amizade não encontrada");
+      }
+    }
+
+    if (!friendshipId) throw new Error("ID da amizade não encontrado");
+
     // Aceita a amizade
     const { error } = await sb
       .from("friendships")
@@ -207,19 +229,9 @@ async function acceptFriendRequest(friendshipId, actorId, myId) {
 
     if (error) throw error;
 
-    // Cria notificação de aceito (opcional)
-    if (actorId && myId) {
-      await sb
-        .from("notifications")
-        .insert({ 
-          user_id: actorId, 
-          actor_id: myId, 
-          kind: "friend_accepted" 
-        })
-        .catch(err => console.warn("Falha ao criar notif de aceito:", err));
-    }
-
+    console.log("✅ Amizade aceita com sucesso!");
     return true;
+
   } catch (err) {
     console.error("Erro ao aceitar amizade:", err);
     return false;
@@ -501,14 +513,15 @@ function isConfigured() { return !!(getConfig()?.SUPABASE_URL && getConfig()?.SU
 async function acceptFriendFromNotif(notifId, requesterId) {
   if (!requesterId) return;
 
-  const success = await acceptFriendRequest(null, requesterId, getCurrentUser()?.id); // friendshipId = null por enquanto
+  const myId = getCurrentUser()?.id;
+  const success = await acceptFriendRequest(null, requesterId, myId);
 
   if (success) {
     await markNotificationAsRead(notifId);
     refreshNotifications();
     alert("✅ Amizade aceita com sucesso!");
   } else {
-    alert("❌ Erro ao aceitar amizade.");
+    alert("❌ Não foi possível aceitar a solicitação.");
   }
 }
 
@@ -662,6 +675,4 @@ function renderNotifDropdown(dropdown, notifs) {
     dropdown.innerHTML += html;
   });
 }
-
-
 
