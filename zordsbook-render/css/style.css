@@ -821,3 +821,84 @@ a:hover {
 .community-card:last-child {
   border-bottom: none;
 }
+
+/* ── Chat lateral retrô ───────────────────────── */
+
+.chat-sidebar {
+  position: fixed;
+  right: 0;
+  top: 42px;
+  width: 220px;
+  height: calc(100vh - 42px);
+
+  background: #f6f7f8;
+  border-left: 1px solid #bfc7d8;
+
+  overflow-y: auto;
+  z-index: 999;
+}
+
+/* Título */
+.chat-sidebar-header {
+  padding: 8px;
+  font-size: 11px;
+  font-weight: bold;
+  color: #666;
+  border-bottom: 1px solid #d8dfea;
+
+  background: linear-gradient(#ffffff, #eceff5);
+}
+
+/* Usuário */
+.chat-user {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  padding: 6px 8px;
+
+  cursor: pointer;
+
+  border-bottom: 1px solid #ececec;
+
+  transition: background 0.15s;
+}
+
+.chat-user:hover {
+  background: #e9eff7;
+}
+
+/* Avatar */
+.chat-user img {
+  width: 28px;
+  height: 28px;
+
+  border-radius: 2px;
+  object-fit: cover;
+
+  border: 1px solid #ccc;
+}
+
+/* Nome */
+.chat-user-name {
+  flex: 1;
+
+  font-size: 11px;
+  color: #1d2129;
+
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Online */
+.online-dot {
+  width: 8px;
+  height: 8px;
+
+  background: #4ecb4e;
+
+  border-radius: 50%;
+
+  box-shadow: 0 0 3px rgba(78,203,78,0.8);
+}
