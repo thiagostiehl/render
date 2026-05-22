@@ -195,44 +195,33 @@ async function sendFriendRequest(toUserId) {
 }
 
 
-async function acceptFriendRequest(friendshipId = null, requesterId = null, myId = null) {
+async function acceptFriendRequest(requesterId, myId) {
   const sb = getSupabase();
-  const currentUser = getCurrentUser();
-  
+  if (!requesterId || !myId) return false;
+
   try {
-    myId = myId || currentUser?.id;
+    // Busca a solicitação pendente
+    const { data: friendship, error: findError } = await sb
+      .from("friendships")
+      .select("id")
+      .eq("requester_id", requesterId)
+      .eq("addressee_id", myId)
+      .eq("status", "pending")
+      .maybeSingle();
 
-    // Se não tiver o friendshipId, buscamos pela relação
-    if (!friendshipId && requesterId && myId) {
-      const { data: friendship, error: findError } = await sb
-        .from("friendships")
-        .select("id")
-        .eq("requester_id", requesterId)
-        .eq("addressee_id", myId)
-        .eq("status", "pending")
-        .maybeSingle();
-
-      if (findError) console.error("Erro ao buscar friendship:", findError);
-      
-      if (friendship) {
-        friendshipId = friendship.id;
-      } else {
-        console.warn("❌ Solicitação não encontrada");
-        return false;
-      }
+    if (findError) console.error("Erro ao buscar amizade:", findError);
+    if (!friendship) {
+      console.warn("❌ Solicitação não encontrada");
+      return false;
     }
 
-    if (!friendshipId) {
-      throw new Error("ID da solicitação não encontrado");
-    }
-
-    // Aceita a amizade
-    const { error } = await sb
+    // Aceita a solicitação
+    const { error: updateError } = await sb
       .from("friendships")
       .update({ status: "accepted" })
-      .eq("id", friendshipId);
+      .eq("id", friendship.id);
 
-    if (error) throw error;
+    if (updateError) throw updateError;
 
     console.log("✅ Amizade aceita com sucesso!");
     return true;
