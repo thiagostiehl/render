@@ -193,12 +193,43 @@ async function markNotificationsRead(userId) {
 
 async function createCommunity(name, description, creatorId) {
   const sb = getSupabase();
-  const slug = name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 60) + "-" + Date.now().toString(36);
-  const { data, error } = await sb.from("communities")
-    .insert({ name, description, slug, creator_id: creatorId }).select().single();
+
+  if (!name) throw new Error("Nome da comunidade inválido");
+
+  const safeName = name.toString();
+
+  const slug =
+    safeName
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-|-$/g, "")
+      .slice(0, 60) +
+    "-" +
+    Date.now().toString(36);
+
+  const { data, error } = await sb
+    .from("communities")
+    .insert({
+      name,
+      description,
+      slug,
+      creator_id: creatorId,
+    })
+    .select()
+    .single();
+
   if (error) throw error;
-  await sb.from("community_members").insert({ community_id: data.id, user_id: creatorId }).catch(() => {});
+
+  await sb
+    .from("community_members")
+    .insert({
+      community_id: data.id,
+      user_id: creatorId,
+    })
+    .catch(() => {});
+
   return data;
 }
 
