@@ -172,6 +172,7 @@
     btn.disabled = true;
     try {
       const c = await createCommunity(name, desc, currentUser.id);
+      console.log("RETORNO createCommunity:", c);
       document.getElementById("comm-name").value = "";
       document.getElementById("comm-desc").value = "";
       await refresh();
