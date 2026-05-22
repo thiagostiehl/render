@@ -902,3 +902,68 @@ a:hover {
 
   box-shadow: 0 0 3px rgba(78,203,78,0.8);
 }
+
+/* ── Janela de chat ───────────────────────── */
+
+.chat-window {
+  position: fixed;
+
+  bottom: 0;
+  right: 230px;
+
+  width: 260px;
+
+  background: white;
+
+  border: 1px solid #bfc7d8;
+
+  box-shadow: 0 3px 8px rgba(0,0,0,0.25);
+
+  z-index: 2000;
+}
+
+/* Topo */
+.chat-header {
+  background: linear-gradient(#4e69a2, #3b5998);
+
+  color: white;
+
+  padding: 6px 8px;
+
+  font-size: 11px;
+  font-weight: bold;
+
+  cursor: pointer;
+}
+
+/* Mensagens */
+.chat-messages {
+  height: 220px;
+
+  overflow-y: auto;
+
+  padding: 8px;
+
+  background: #fff;
+}
+
+/* Campo */
+.chat-input {
+  border-top: 1px solid #d8dfea;
+}
+
+.chat-input input {
+  width: 100%;
+
+  border: none;
+
+  padding: 8px;
+
+  font-size: 11px;
+
+  font-family: inherit;
+}
+
+.chat-input input:focus {
+  outline: none;
+}
