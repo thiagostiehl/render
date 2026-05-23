@@ -32,14 +32,9 @@ async function getSessionUser() {
 function getCurrentUser() { return cachedUser; }
 
 async function requireAuth() {
-  // Tenta até 3x com delay — aguenta troca de sessão e redirect pós-login
-  for (let i = 0; i < 3; i++) {
-    const user = await getSessionUser();
-    if (user) return user;
-    if (i < 2) await new Promise(r => setTimeout(r, 600));
-  }
-  window.location.href = "index.html";
-  return null;
+  const user = await getSessionUser();
+  if (!user) { window.location.href = "index.html"; return null; }
+  return user;
 }
 
 async function signIn(email, password) {
@@ -59,8 +54,8 @@ async function signUp(name, email, password) {
 
 async function signOut() {
   const sb = getSupabase();
-  cachedUser = null; // limpa cache ANTES do signOut para evitar estado inconsistente
-  try { await sb.auth.signOut(); } catch (_) {}
+  await sb.auth.signOut();
+  cachedUser = null;
 }
 
 function getSiteBaseUrl() {
@@ -277,7 +272,7 @@ async function createCommunity(name, description, creatorId) {
   const { data, error } = await sb.from("communities")
     .insert({ name, description, slug, creator_id: creatorId }).select().single();
   if (error) throw error;
-  try { await sb.from("community_members").insert({ community_id: data.id, user_id: creatorId }); } catch (_) {}
+  await sb.from("community_members").insert({ community_id: data.id, user_id: creatorId }).catch(() => {});
   return data;
 }
 
@@ -320,13 +315,13 @@ async function toggleLike(postId, userId) {
     // Notifica o autor do post
     const { data: post } = await sb.from("posts").select("user_id").eq("id", postId).maybeSingle();
     if (post && post.user_id !== userId) {
-      try { await sb.from("notifications").insert({
+      await sb.from("notifications").insert({
         user_id: post.user_id,
         actor_id: userId,
         kind: "like",
         post_id: postId,
         read: false,
-      }); } catch (_) {}
+      }).catch(() => {});
     }
   }
 }
@@ -343,13 +338,13 @@ async function toggleDislike(postId, userId) {
     // Notifica o autor do post
     const { data: post } = await sb.from("posts").select("user_id").eq("id", postId).maybeSingle();
     if (post && post.user_id !== userId) {
-      try { await sb.from("notifications").insert({
+      await sb.from("notifications").insert({
         user_id: post.user_id,
         actor_id: userId,
         kind: "dislike",
         post_id: postId,
         read: false,
-      }); } catch (_) {}
+      }).catch(() => {});
     }
   }
 }
@@ -415,7 +410,7 @@ async function createTestimonial(profileUserId, authorUserId, text) {
   const sb = getSupabase();
   const { error } = await sb.from("testimonials").insert({ profile_user_id: profileUserId, author_user_id: authorUserId, text });
   if (error) throw error;
-  try { await sb.from("notifications").insert({ user_id: profileUserId, actor_id: authorUserId, kind: "testimonial" }); } catch (_) {}
+  await sb.from("notifications").insert({ user_id: profileUserId, actor_id: authorUserId, kind: "testimonial" }).catch(() => {});
 }
 
 // ── Spotify friends ───────────────────────────────────────────────────────────
@@ -431,24 +426,22 @@ async function fetchFriendsNowPlaying(friendIds, nowPlayingUrl) {
 // ── UI helpers ────────────────────────────────────────────────────────────────
 
 function formatTime(ts) {
-  if (!ts) return "";
-  const d = ts instanceof Date ? ts : new Date(ts);
-  const now = new Date();
-  const diff = Math.floor((now - d) / 1000);
-  if (diff < 60) return "agora mesmo";
-  if (diff < 3600) return `há ${Math.floor(diff/60)} min`;
-  if (diff < 86400) return `há ${Math.floor(diff/3600)} h`;
-  if (diff < 604800) return `há ${Math.floor(diff/86400)} dia${Math.floor(diff/86400)>1?"s":""}`;
-  return d.toLocaleDateString("pt-BR", { day:"2-digit", month:"short", year: d.getFullYear()!==now.getFullYear()?"numeric":undefined });
+  const diff = Date.now() - ts;
+  const min = Math.floor(diff / 60000);
+  if (min < 1) return "agora";
+  if (min < 60) return `há ${min} min`;
+  const h = Math.floor(min / 60);
+  if (h < 24) return `há ${h} h`;
+  const d = Math.floor(h / 24);
+  if (d < 7) return `há ${d} dia${d > 1 ? "s" : ""}`;
+  return new Date(ts).toLocaleDateString("pt-BR");
 }
 
 function avatarUrl(user) {
-  if (!user) return `https://api.dicebear.com/7.x/initials/svg?seed=?`;
-  // user.avatar = campo do profileToUser local
-  // user.avatar_url = campo direto do Supabase (joins, notificações)
-  const url = user.avatar || user.avatar_url || "";
-  if (url) return url;
-  return `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(user.name || "?")}`;
+  if (user && user.avatar) return user.avatar;
+  const initial = ((user && user.name) || "?").charAt(0).toUpperCase();
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80"><rect fill="%233b5998" width="80" height="80"/><text x="50%" y="54%" dominant-baseline="middle" text-anchor="middle" fill="white" font-size="36" font-family="Tahoma">${initial}</text></svg>`;
+  return `data:image/svg+xml,${encodeURIComponent(svg)}`;
 }
 
 function coverStyle(user) {
@@ -477,7 +470,7 @@ function renderTopbar(activePage, user, unreadCount) {
         <nav>${links}</nav>
         <div style="display:flex;align-items:center;gap:12px">
           <div class="notif-wrap" id="notif-wrap">
-            <button class="notif-btn" id="notif-btn" title="Notificações"><span class="notif-z">Z</span>${badge}</button>
+            <button class="notif-btn" id="notif-btn" title="Notificações">🔔${badge}</button>
             <div class="notif-dropdown" id="notif-dropdown" style="display:none"></div>
           </div>
           <span class="topbar-user">Olá, <strong>${user.name}</strong> · <a href="#" id="btn-logout" style="color:#fff">Sair</a></span>
@@ -486,13 +479,7 @@ function renderTopbar(activePage, user, unreadCount) {
     </header>`;
 }
 
-// ── Notificações: delegação global — funciona mesmo com topbar re-renderizado ──
-let _notifCurrentUser = null;
-let _notifListenerAttached = false;
-
 async function initNotifications(currentUser) {
-  _notifCurrentUser = currentUser;
-
   const notifs = await fetchNotifications(currentUser.id);
   const unread = notifs.filter(n => !n.read).length;
 
@@ -501,35 +488,28 @@ async function initNotifications(currentUser) {
     const activePage = document.body.dataset.page || "";
     topbarEl.innerHTML = renderTopbar(activePage, currentUser, unread);
     bindLogout();
+    bindNotifDropdown(currentUser, notifs);
   }
+}
 
-  // Registra delegação UMA única vez por página — sobrevive a re-renders do topbar
-  if (!_notifListenerAttached) {
-    _notifListenerAttached = true;
+async function bindNotifDropdown(currentUser, notifs) {
+  const btn = document.getElementById("notif-btn");
+  const dropdown = document.getElementById("notif-dropdown");
+  if (!btn || !dropdown) return;
 
-    document.addEventListener("click", async (e) => {
-      const btn = e.target.closest("#notif-btn");
-      const dropdown = document.getElementById("notif-dropdown");
-      if (!dropdown) return;
+  btn.addEventListener("click", async (e) => {
+    e.stopPropagation();
+    const isOpen = dropdown.style.display !== "none";
+    dropdown.style.display = isOpen ? "none" : "block";
+    if (!isOpen) {
+      renderNotifDropdown(dropdown, notifs, currentUser);
+      await markNotificationsRead(currentUser.id);
+      const badge = document.querySelector(".notif-badge");
+      if (badge) badge.remove();
+    }
+  });
 
-      if (btn) {
-        // Clique no botão Z — abre/fecha
-        e.stopPropagation();
-        const isOpen = dropdown.style.display !== "none";
-        dropdown.style.display = isOpen ? "none" : "block";
-        if (!isOpen && _notifCurrentUser) {
-          dropdown.innerHTML = `<div style="padding:16px;text-align:center;color:#90949c;font-size:11px">Carregando...</div>`;
-          const fresh = await fetchNotifications(_notifCurrentUser.id);
-          renderNotifDropdown(dropdown, fresh, _notifCurrentUser);
-          await markNotificationsRead(_notifCurrentUser.id);
-          document.querySelector(".notif-badge")?.remove();
-        }
-      } else if (!e.target.closest("#notif-dropdown")) {
-        // Clique fora — fecha
-        dropdown.style.display = "none";
-      }
-    });
-  }
+  document.addEventListener("click", () => { dropdown.style.display = "none"; });
 }
 
 // CORRIGIDO: função única, sem duplicatas, com eventos via dataset (sem onclick inline)
@@ -546,8 +526,8 @@ function renderNotifDropdown(dropdown, notifs, currentUser) {
 
     if (notif.kind === "friend_request") {
       return `
-        <div class="notification-item" data-id="${notif.id}" data-kind="friend_request">
-          <a href="profile.html?user=${notif.actor_id}"><img src="${actorAvatar}" class="notif-avatar" alt=""></a>
+        <div class="notification-item" data-id="${notif.id}">
+          <img src="${actorAvatar}" class="notif-avatar" alt="">
           <div class="notif-content">
             <strong>${actorName}</strong> quer ser seu amigo
             <div class="notif-actions">
@@ -621,46 +601,19 @@ async function acceptFriendFromNotif(notifId, requesterId) {
   const myId = getCurrentUser()?.id;
   const success = await acceptFriendRequest(requesterId, myId);
   if (success) {
-    // Deleta a notificação do banco — não volta nunca mais
-    const sb = getSupabase();
-    await sb.from("notifications").delete().eq("id", notifId);
-    removeNotifItem(notifId);
+    await markNotificationAsRead(notifId);
+    // Remove o item do dropdown visualmente
+    document.querySelector(`.notification-item[data-id="${notifId}"]`)?.remove();
+    alert("✅ Amizade aceita com sucesso!");
   } else {
     alert("❌ Não foi possível aceitar. Tente pela página Membros.");
   }
 }
 
 async function rejectFriendFromNotif(notifId) {
-  const sb = getSupabase();
-  await sb.from("notifications").delete().eq("id", notifId);
-  removeNotifItem(notifId);
-}
-
-function removeNotifItem(notifId) {
-  const item = document.querySelector(`.notification-item[data-id="${notifId}"]`);
-  if (item) item.remove();
-  const dropdown = document.getElementById("notif-dropdown");
-  if (dropdown && !dropdown.querySelector(".notification-item")) {
-    dropdown.innerHTML = `<div class="notif-empty">Nenhuma notificação nova.</div>`;
-  }
-}
-
-
-// ── Sugestões de amigos (amigos dos meus amigos) ─────────────────────────────
-function getFriendSuggestions(friendships, users, myId, limit = 5) {
-  const myFriendIds = new Set(getMyFriendIds(friendships, myId));
-  const suggestions = new Map();
-  myFriendIds.forEach(friendId => {
-    getMyFriendIds(friendships, friendId).forEach(fofId => {
-      if (fofId === myId || myFriendIds.has(fofId)) return;
-      suggestions.set(fofId, (suggestions.get(fofId) || 0) + 1);
-    });
-  });
-  return [...suggestions.entries()]
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, limit)
-    .map(([id, mutual]) => ({ user: users.find(u => u.id === id), mutual }))
-    .filter(s => s.user);
+  if (!confirm("Recusar este pedido de amizade?")) return;
+  await markNotificationAsRead(notifId);
+  document.querySelector(`.notification-item[data-id="${notifId}"]`)?.remove();
 }
 
 function bindLogout() {

@@ -75,19 +75,10 @@
   }
 
   function renderMembersGrid(filter) {
-    const friendIds = new Set(getMyFriendIds(allData.friendships, currentUser.id));
-    const others = allData.users
-      .filter(u => u.id !== currentUser.id && (!filter || u.name.toLowerCase().includes(filter.toLowerCase())))
-      .sort((a, b) => {
-        // Amigos aparecem primeiro, depois por nome
-        const aFriend = friendIds.has(a.id) ? 0 : 1;
-        const bFriend = friendIds.has(b.id) ? 0 : 1;
-        if (aFriend !== bFriend) return aFriend - bFriend;
-        return a.name.localeCompare(b.name, "pt-BR");
-      });
+    const others = allData.users.filter(u =>
+      u.id !== currentUser.id && (!filter || u.name.toLowerCase().includes(filter.toLowerCase()))
+    );
     const container = document.getElementById("members-grid");
-    const countEl = document.getElementById("members-count");
-    if (countEl) countEl.textContent = filter ? `${others.length} resultado${others.length!==1?"s":""}` : `${others.length} membro${others.length!==1?"s":""}`;
     if (!others.length) {
       container.innerHTML = `<p style="color:#90949c;font-size:11px">Nenhum membro encontrado.</p>`;
       return;
@@ -108,7 +99,7 @@
       return `<div class="member-card">
         <a href="profile.html?user=${u.id}"><img src="${avatarUrl(u)}" alt=""></a>
         <div class="member-info">
-          <strong><a href="profile.html?user=${u.id}" style="color:#365899">${filter ? u.name.replace(new RegExp("(" + filter.replace(/[.*+?^${}()|[\]\\]/g,"\\$&") + ")", "gi"), "<mark style=\'background:#fff3cd;padding:0 1px\'>$1</mark>") : u.name}</a></strong>
+          <strong><a href="profile.html?user=${u.id}" style="color:#365899">${u.name}</a></strong>
           <p style="font-size:10px;color:#90949c;margin:2px 0 6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${u.bio || "Sem bio"}</p>
           ${actionHtml}
         </div>
@@ -153,11 +144,8 @@
     renderMembersGrid(document.getElementById("search-members").value);
   }
 
-  const searchInput = document.getElementById("search-members");
-  let searchTimeout;
-  searchInput.addEventListener("input", e => {
-    clearTimeout(searchTimeout);
-    searchTimeout = setTimeout(() => renderMembersGrid(e.target.value), 200);
+  document.getElementById("search-members").addEventListener("input", e => {
+    renderMembersGrid(e.target.value);
   });
 
   await refresh();
