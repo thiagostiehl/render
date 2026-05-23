@@ -30,9 +30,23 @@
       <p style="margin:6px 0 2px"><a href="profile.html"><strong>${currentUser.name}</strong></a></p>
       <p style="margin-bottom:6px">${spotifyBtn}</p>`;
 
-    document.getElementById("friend-list").innerHTML = friends.length
-      ? friends.map(f => `<li><img src="${avatarUrl(f)}" alt=""><a href="profile.html?user=${f.id}">${f.name}</a></li>`).join("")
-      : `<li style="color:#90949c;font-size:10px">Adicione amigos na aba <a href="members.html">Membros</a>!</li>`;
+    // Atualiza título com contagem
+    const friendTitle = document.querySelector("#friend-list")?.closest(".box")?.querySelector("h3");
+    if (friendTitle) friendTitle.textContent = `Meus amigos${friends.length ? " (" + friends.length + ")" : ""}`;
+
+    const friendGrid = document.getElementById("friend-list");
+    if (friends.length) {
+      friendGrid.style.cssText = "display:grid;grid-template-columns:repeat(3,1fr);gap:6px;list-style:none;padding:0;margin:0";
+      friendGrid.innerHTML = friends.map(f => `
+        <li style="text-align:center">
+          <a href="profile.html?user=${f.id}" style="text-decoration:none;color:inherit">
+            <img src="${avatarUrl(f)}" alt="" style="width:52px;height:52px;border-radius:4px;object-fit:cover;display:block;margin:0 auto 3px">
+            <span style="font-size:10px;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${f.name.split(" ")[0]}</span>
+          </a>
+        </li>`).join("");
+    } else {
+      friendGrid.innerHTML = `<li style="color:#90949c;font-size:10px">Adicione amigos na aba <a href="members.html">Membros</a>!</li>`;
+    }
   }
 
   // ── Minhas comunidades (rightbar) ────────────────────────────────────────
@@ -119,6 +133,35 @@
     </div>`;
   }
 
+
+  // ── Sugestões de amigos ───────────────────────────────────────────────────
+  function renderFriendSuggestions() {
+    const container = document.getElementById("home-suggestions");
+    if (!container || !allData) return;
+    const suggestions = getFriendSuggestions(allData.friendships, allData.users, currentUser.id, 4);
+    if (!suggestions.length) { document.getElementById("suggestions-box").style.display = "none"; return; return; }
+    document.getElementById("suggestions-box").style.display = "";
+    container.innerHTML = suggestions.map(({ user: u, mutual }) => `
+      <div style="display:flex;gap:8px;align-items:center;padding:5px 0;border-bottom:1px solid #e9eaed">
+        <a href="profile.html?user=${u.id}">
+          <img src="${avatarUrl(u)}" style="width:36px;height:36px;border-radius:3px;object-fit:cover;border:1px solid #dddfe2" alt="">
+        </a>
+        <div style="flex:1;min-width:0">
+          <a href="profile.html?user=${u.id}" style="color:#365899;font-weight:bold;font-size:11px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${u.name}</a>
+          <span style="font-size:10px;color:#90949c">${mutual} amigo${mutual>1?"s":""} em comum</span>
+        </div>
+        <button class="btn btn-small btn-suggest-add" data-id="${u.id}" style="flex-shrink:0">+ Add</button>
+      </div>`).join("");
+
+    container.querySelectorAll(".btn-suggest-add").forEach(btn => {
+      btn.addEventListener("click", async () => {
+        btn.disabled = true;
+        try { await sendFriendRequest(btn.dataset.id, currentUser.id); btn.textContent = "Enviado ✓"; btn.style.color = "#5b9a3f"; }
+        catch { btn.disabled = false; }
+      });
+    });
+  }
+
   async function updateSpotify() {
     try {
       const [myNp, friendIds] = [
@@ -126,23 +169,123 @@
         allData ? getMyFriendIds(allData.friendships, currentUser.id) : [],
       ];
       renderMyNowPlaying(myNp);
+      let friendsNp = [];
       if (friendIds.length && allData) {
-        const friendsNp = await fetchFriendsNowPlaying(friendIds, NOW_PLAYING_URL);
+        friendsNp = await fetchFriendsNowPlaying(friendIds, NOW_PLAYING_URL);
         renderFriendsNowPlaying(friendsNp);
+      }
+      if (allData) {
+        const tickerItems = buildTickerItems(allData, friendIds, friendsNp);
+        renderTicker(tickerItems);
       }
     } catch (e) { console.warn("Spotify update error", e); }
   }
 
-  // ── Feed (mural de amigos) ────────────────────────────────────────────────
+  // ── Activity Ticker ───────────────────────────────────────────────────────
+  function buildTickerItems(data, friendIds, friendsNp) {
+    const items = [];
+    const friendSet = new Set(friendIds);
+
+    // Músicas tocando agora
+    if (friendsNp && friendsNp.length) {
+      friendsNp.forEach(np => {
+        const user = data.userById[np.userId];
+        if (!user) return;
+        const artists = (np.artists || []).join(", ");
+        items.push(`🎵 <a href="profile.html?user=${user.id}">${user.name}</a> está ouvindo <strong>${np.track_name}</strong>${artists ? " — " + artists : ""}`);
+      });
+    }
+
+    // Posts recentes de amigos (últimas 24h — fuso pode variar, então margem generosa)
+    const oneDayAgo = Date.now() - 24 * 60 * 60 * 1000;
+    const recentPosts = data.posts
+      .filter(p => !p.communityId && friendSet.has(p.userId) && p.createdAt > oneDayAgo)
+      .slice(0, 8);
+    recentPosts.forEach(p => {
+      const user = data.userById[p.userId];
+      if (!user) return;
+      const preview = p.text ? ` "${p.text.slice(0, 40)}${p.text.length > 40 ? "…" : ""}"` : " uma foto";
+      items.push(`📝 <a href="profile.html?user=${user.id}">${user.name}</a> publicou${preview}`);
+    });
+
+    // Se ainda não tem posts recentes, pega os últimos 5 de qualquer data
+    if (!recentPosts.length) {
+      data.posts
+        .filter(p => !p.communityId && friendSet.has(p.userId))
+        .slice(0, 5)
+        .forEach(p => {
+          const user = data.userById[p.userId];
+          if (!user) return;
+          const preview = p.text ? ` "${p.text.slice(0, 40)}${p.text.length > 40 ? "…" : ""}"` : " uma foto";
+          items.push(`📝 <a href="profile.html?user=${user.id}">${user.name}</a> publicou${preview}`);
+        });
+    }
+
+    // Comunidades dos amigos
+    data.communityMembers
+      .filter(m => friendSet.has(m.user_id))
+      .slice(0, 4)
+      .forEach(m => {
+        const user = data.userById[m.user_id];
+        const comm = data.communityById?.[m.community_id];
+        if (!user || !comm) return;
+        items.push(`🏘 <a href="profile.html?user=${user.id}">${user.name}</a> participa de <a href="communities.html?id=${comm.id}">${comm.name}</a>`);
+      });
+
+    // Fallback: lista de amigos
+    if (items.length === 0 && friendIds.length) {
+      friendIds.slice(0, 5).forEach(id => {
+        const user = data.userById[id];
+        if (!user) return;
+        items.push(`👤 <a href="profile.html?user=${user.id}">${user.name}</a> é seu amigo no ZordsBook`);
+      });
+    }
+
+    return items;
+  }
+
+  function renderTicker(items) {
+    const tickerEl = document.getElementById("activity-ticker");
+    const contentEl = document.getElementById("ticker-content");
+    if (!tickerEl || !contentEl) return;
+
+    if (!items.length) {
+      // Mostra mensagem padrão mesmo sem itens
+      items = ["👋 Bem-vindo ao ZordsBook! Adicione amigos e veja as atividades deles aqui."];
+    }
+
+    // Duplica o conteúdo para o loop contínuo seamless
+    const html = items.map(t => `<span class="ticker-item">${t}</span>`).join("");
+    contentEl.innerHTML = html + html;
+
+    const duration = Math.max(25, items.length * 7);
+    contentEl.style.animationDuration = duration + "s";
+
+    tickerEl.style.display = "flex";
+  }
+
+
   async function refreshFeed() {
+    // Skeleton só se o container estiver vazio (primeiro carregamento)
+    const feedContainer = document.getElementById("feed-posts");
+    if (feedContainer && !feedContainer.querySelector(".post")) {
+      feedContainer.innerHTML = renderPostSkeleton(3);
+    }
     allData = await fetchCommunityData();
     renderSidebar();
     renderMyCommunities();
+    renderFriendSuggestions();
 
-    const friendIds = new Set(getMyFriendIds(allData.friendships, currentUser.id));
+    // Ticker inicial (sem Spotify ainda — será atualizado no updateSpotify)
+    const initialFriendIds = getMyFriendIds(allData.friendships, currentUser.id);
+    renderTicker(buildTickerItems(allData, initialFriendIds, []));
+
+    const friendIds = new Set(initialFriendIds);
     friendIds.add(currentUser.id); // meus próprios posts também aparecem
 
-    const feedPosts = allData.posts.filter(p => !p.communityId && friendIds.has(p.userId));
+    const feedPosts = allData.posts
+      .filter(p => !p.communityId && friendIds.has(p.userId))
+      .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
     const container = document.getElementById("feed-posts");
 
     if (feedPosts.length === 0) {
@@ -151,7 +294,16 @@
       </p>`;
       return;
     }
+    // Preserva quais comentários estavam abertos antes do refresh
+    const openComments = new Set(
+      [...document.querySelectorAll(".comments")].filter(el => el.style.display !== "none").map(el => el.id.replace("comments-", ""))
+    );
     container.innerHTML = feedPosts.map(p => renderPost(p, allData, currentUser)).join("");
+    // Reabre comentários que estavam abertos
+    openComments.forEach(id => {
+      const el = document.getElementById(`comments-${id}`);
+      if (el) el.style.display = "block";
+    });
     bindPostActions(currentUser, refreshFeed);
   }
 
@@ -197,6 +349,8 @@
       document.getElementById("post-youtube").value = "";
       document.getElementById("post-image-preview").innerHTML = "";
       await refreshFeed();
+      // Scroll suave até o primeiro post
+      document.getElementById("feed-posts")?.firstElementChild?.scrollIntoView({ behavior: "smooth", block: "start" });
     } catch (err) {
       console.error(err);
       alert("Não foi possível publicar: " + (err.message || err));
