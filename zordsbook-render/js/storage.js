@@ -32,9 +32,14 @@ async function getSessionUser() {
 function getCurrentUser() { return cachedUser; }
 
 async function requireAuth() {
-  const user = await getSessionUser();
-  if (!user) { window.location.href = "index.html"; return null; }
-  return user;
+  // Tenta até 3x com delay — aguenta troca de sessão e redirect pós-login
+  for (let i = 0; i < 3; i++) {
+    const user = await getSessionUser();
+    if (user) return user;
+    if (i < 2) await new Promise(r => setTimeout(r, 600));
+  }
+  window.location.href = "index.html";
+  return null;
 }
 
 async function signIn(email, password) {
@@ -54,8 +59,8 @@ async function signUp(name, email, password) {
 
 async function signOut() {
   const sb = getSupabase();
-  await sb.auth.signOut();
-  cachedUser = null;
+  cachedUser = null; // limpa cache ANTES do signOut para evitar estado inconsistente
+  try { await sb.auth.signOut(); } catch (_) {}
 }
 
 function getSiteBaseUrl() {
