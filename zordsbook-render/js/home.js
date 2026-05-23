@@ -178,6 +178,11 @@
 
   // ── Feed (mural de amigos) ────────────────────────────────────────────────
   async function refreshFeed() {
+    // Skeleton só se o container estiver vazio (primeiro carregamento)
+    const feedContainer = document.getElementById("feed-posts");
+    if (feedContainer && !feedContainer.querySelector(".post")) {
+      feedContainer.innerHTML = renderPostSkeleton(3);
+    }
     allData = await fetchCommunityData();
     renderSidebar();
     renderMyCommunities();
@@ -297,8 +302,6 @@
   // ── Init ──────────────────────────────────────────────────────────────────
   try {
     handleSpotifyCallback();
-    // Skeleton enquanto carrega
-    document.getElementById("feed-posts").innerHTML = renderPostSkeleton(3);
     await refreshFeed();
     await initNotifications(currentUser);
     await updateSpotify();
