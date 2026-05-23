@@ -426,15 +426,15 @@ async function fetchFriendsNowPlaying(friendIds, nowPlayingUrl) {
 // ── UI helpers ────────────────────────────────────────────────────────────────
 
 function formatTime(ts) {
-  const diff = Date.now() - ts;
-  const min = Math.floor(diff / 60000);
-  if (min < 1) return "agora";
-  if (min < 60) return `há ${min} min`;
-  const h = Math.floor(min / 60);
-  if (h < 24) return `há ${h} h`;
-  const d = Math.floor(h / 24);
-  if (d < 7) return `há ${d} dia${d > 1 ? "s" : ""}`;
-  return new Date(ts).toLocaleDateString("pt-BR");
+  if (!ts) return "";
+  const d = ts instanceof Date ? ts : new Date(ts);
+  const now = new Date();
+  const diff = Math.floor((now - d) / 1000);
+  if (diff < 60) return "agora mesmo";
+  if (diff < 3600) return `há ${Math.floor(diff/60)} min`;
+  if (diff < 86400) return `há ${Math.floor(diff/3600)} h`;
+  if (diff < 604800) return `há ${Math.floor(diff/86400)} dia${Math.floor(diff/86400)>1?"s":""}`;
+  return d.toLocaleDateString("pt-BR", { day:"2-digit", month:"short", year: d.getFullYear()!==now.getFullYear()?"numeric":undefined });
 }
 
 function avatarUrl(user) {
@@ -602,18 +602,43 @@ async function acceptFriendFromNotif(notifId, requesterId) {
   const success = await acceptFriendRequest(requesterId, myId);
   if (success) {
     await markNotificationAsRead(notifId);
-    // Remove o item do dropdown visualmente
-    document.querySelector(`.notification-item[data-id="${notifId}"]`)?.remove();
-    alert("✅ Amizade aceita com sucesso!");
+    const item = document.querySelector(`.notification-item[data-id="${notifId}"]`);
+    if (item) item.remove();
+    const dropdown = document.getElementById("notif-dropdown");
+    if (dropdown && !dropdown.querySelector(".notification-item")) {
+      dropdown.innerHTML = `<div class="notif-empty">Nenhuma notificação nova.</div>`;
+    }
   } else {
     alert("❌ Não foi possível aceitar. Tente pela página Membros.");
   }
 }
 
 async function rejectFriendFromNotif(notifId) {
-  if (!confirm("Recusar este pedido de amizade?")) return;
   await markNotificationAsRead(notifId);
-  document.querySelector(`.notification-item[data-id="${notifId}"]`)?.remove();
+  const item = document.querySelector(`.notification-item[data-id="${notifId}"]`);
+  if (item) item.remove();
+  const dropdown = document.getElementById("notif-dropdown");
+  if (dropdown && !dropdown.querySelector(".notification-item")) {
+    dropdown.innerHTML = `<div class="notif-empty">Nenhuma notificação nova.</div>`;
+  }
+}
+
+
+// ── Sugestões de amigos (amigos dos meus amigos) ─────────────────────────────
+function getFriendSuggestions(friendships, users, myId, limit = 5) {
+  const myFriendIds = new Set(getMyFriendIds(friendships, myId));
+  const suggestions = new Map();
+  myFriendIds.forEach(friendId => {
+    getMyFriendIds(friendships, friendId).forEach(fofId => {
+      if (fofId === myId || myFriendIds.has(fofId)) return;
+      suggestions.set(fofId, (suggestions.get(fofId) || 0) + 1);
+    });
+  });
+  return [...suggestions.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, limit)
+    .map(([id, mutual]) => ({ user: users.find(u => u.id === id), mutual }))
+    .filter(s => s.user);
 }
 
 function bindLogout() {

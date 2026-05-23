@@ -76,6 +76,7 @@
   document.getElementById("profile-name").textContent = profileUser.name;
   document.getElementById("profile-bio").textContent = profileUser.bio || "Sem informações na bio ainda.";
   renderFriendButton();
+  renderProfileStats();
 
   // ── Sobre + Bio edit ──────────────────────────────────────────────────────
   document.getElementById("profile-about").innerHTML = `
@@ -90,15 +91,65 @@
         <button type="submit" class="btn btn-small">Salvar bio</button>
       </form>` : ""}`;
 
+  // ── Estatísticas do perfil ──────────────────────────────────────────────
+  function renderProfileStats() {
+    const friendCount = getMyFriendIds(allData.friendships, profileUser.id).length;
+    const commCount = allData.communities.filter(c =>
+      allData.communityMembers.some(m => m.community_id === c.id && m.user_id === profileUser.id)
+    ).length;
+    const postCount = allData.posts.filter(p => p.userId === profileUser.id && !p.communityId).length;
+    const statsEl = document.getElementById("profile-stats");
+    if (statsEl) {
+      statsEl.innerHTML = `
+        <span><strong>${postCount}</strong> posts</span>
+        <span style="margin:0 10px">·</span>
+        <span><strong>${friendCount}</strong> amigos</span>
+        <span style="margin:0 10px">·</span>
+        <span><strong>${commCount}</strong> comunidades</span>`;
+    }
+  }
+
   // ── Amigos do perfil ──────────────────────────────────────────────────────
   function renderProfileFriends() {
     const friendIds = getMyFriendIds(allData.friendships, profileUser.id);
     const friends = friendIds.map(id => allData.userById[id]).filter(Boolean);
-    document.getElementById("profile-friends").innerHTML = friends.length
-      ? friends.map(f => `<li><img src="${avatarUrl(f)}" alt=""><a href="profile.html?user=${f.id}">${f.name}</a></li>`).join("")
-      : `<li style="color:#90949c;font-size:10px">Nenhum amigo ainda.</li>`;
+    const el = document.getElementById("profile-friends");
+    if (friends.length) {
+      el.style.cssText = "display:grid;grid-template-columns:repeat(3,1fr);gap:6px;list-style:none;padding:0;margin:0";
+      el.innerHTML = friends.map(f => `
+        <li style="text-align:center">
+          <a href="profile.html?user=${f.id}" style="text-decoration:none;color:inherit">
+            <img src="${avatarUrl(f)}" alt="" style="width:52px;height:52px;border-radius:4px;object-fit:cover;display:block;margin:0 auto 3px">
+            <span style="font-size:10px;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${f.name.split(" ")[0]}</span>
+          </a>
+        </li>`).join("");
+    } else {
+      el.innerHTML = `<li style="color:#90949c;font-size:10px">Nenhum amigo ainda.</li>`;
+    }
   }
+
+  function renderProfileCommunities() {
+    const container = document.getElementById("profile-communities");
+    if (!container || !allData) return;
+    const myComms = allData.communities.filter(c =>
+      allData.communityMembers.some(m => m.community_id === c.id && m.user_id === profileUser.id)
+    ).slice(0, 6);
+    if (!myComms.length) {
+      container.innerHTML = `<p style="color:#90949c;font-size:10px">Nenhuma comunidade ainda.</p>`;
+      return;
+    }
+    container.style.cssText = "display:grid;grid-template-columns:repeat(3,1fr);gap:6px";
+    container.innerHTML = myComms.map(c => `
+      <div style="text-align:center">
+        <a href="communities.html?id=${c.id}" style="text-decoration:none;color:inherit">
+          <div style="width:52px;height:52px;background:#3b5998;color:#fff;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:bold;margin:0 auto 3px">${c.name.charAt(0).toUpperCase()}</div>
+          <span style="font-size:10px;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.name}</span>
+        </a>
+      </div>`).join("");
+  }
+
   renderProfileFriends();
+  renderProfileCommunities();
 
   document.getElementById("profile-meta").textContent = isOwnProfile
     ? "Seu perfil — troque foto e capa, receba depoimentos dos amigos."
@@ -131,6 +182,8 @@
     renderCover();
     renderTestimonials();
     renderProfileFriends();
+    renderProfileCommunities();
+    renderProfileStats();
 
     const posts = allData.posts.filter(p => p.userId === profileUser.id && !p.communityId).sort((a, b) => b.createdAt - a.createdAt);
     const container = document.getElementById("profile-posts");

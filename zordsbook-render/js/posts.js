@@ -26,7 +26,11 @@ function renderPost(post, data, currentUser) {
 
   const commentsHtml = post.comments.map((c) => {
     const cu = data.userById[c.userId];
-    return `<div class="comment"><strong>${escapeHtml(cu ? cu.name : "Usuário")}</strong> ${escapeHtml(c.text)}</div>`;
+    const cuAvatar = cu ? avatarUrl(cu) : `https://api.dicebear.com/7.x/initials/svg?seed=?`;
+    return `<div class="comment" style="display:flex;gap:6px;align-items:flex-start;margin-bottom:6px">
+      <img src="${cuAvatar}" style="width:24px;height:24px;border-radius:2px;flex-shrink:0;object-fit:cover" alt="">
+      <div><strong><a href="profile.html?user=${c.userId}" style="color:#365899">${escapeHtml(cu ? cu.name : "Usuário")}</a></strong> ${escapeHtml(c.text)}<br><span style="font-size:10px;color:#90949c">${formatTime(c.createdAt)}</span></div>
+    </div>`;
   }).join("");
 
   const community = post.communityId ? data.communityById?.[post.communityId] : null;
@@ -73,7 +77,7 @@ function renderPost(post, data, currentUser) {
         <button type="button" class="btn-link btn-toggle-comments" data-id="${post.id}">Comentar</button>
         ${isOwner ? `<button type="button" class="btn-link btn-delete-post" data-id="${post.id}" style="color:#e74c3c;margin-left:auto">Excluir</button>` : ""}
       </div>
-      <div class="comments" id="comments-${post.id}" style="display:none">
+      <div class="comments" id="comments-${post.id}" style="display:${post.comments.length > 0 ? 'block' : 'none'}">
         ${commentsHtml}
         <form class="comment-form" data-post-id="${post.id}">
           <input type="text" placeholder="Escreva um comentário..." required>

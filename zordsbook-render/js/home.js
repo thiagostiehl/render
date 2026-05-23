@@ -30,9 +30,23 @@
       <p style="margin:6px 0 2px"><a href="profile.html"><strong>${currentUser.name}</strong></a></p>
       <p style="margin-bottom:6px">${spotifyBtn}</p>`;
 
-    document.getElementById("friend-list").innerHTML = friends.length
-      ? friends.map(f => `<li><img src="${avatarUrl(f)}" alt=""><a href="profile.html?user=${f.id}">${f.name}</a></li>`).join("")
-      : `<li style="color:#90949c;font-size:10px">Adicione amigos na aba <a href="members.html">Membros</a>!</li>`;
+    // Atualiza título com contagem
+    const friendTitle = document.querySelector("#friend-list")?.closest(".box")?.querySelector("h3");
+    if (friendTitle) friendTitle.textContent = `Meus amigos${friends.length ? " (" + friends.length + ")" : ""}`;
+
+    const friendGrid = document.getElementById("friend-list");
+    if (friends.length) {
+      friendGrid.style.cssText = "display:grid;grid-template-columns:repeat(3,1fr);gap:6px;list-style:none;padding:0;margin:0";
+      friendGrid.innerHTML = friends.map(f => `
+        <li style="text-align:center">
+          <a href="profile.html?user=${f.id}" style="text-decoration:none;color:inherit">
+            <img src="${avatarUrl(f)}" alt="" style="width:52px;height:52px;border-radius:4px;object-fit:cover;display:block;margin:0 auto 3px">
+            <span style="font-size:10px;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${f.name.split(" ")[0]}</span>
+          </a>
+        </li>`).join("");
+    } else {
+      friendGrid.innerHTML = `<li style="color:#90949c;font-size:10px">Adicione amigos na aba <a href="members.html">Membros</a>!</li>`;
+    }
   }
 
   // ── Minhas comunidades (rightbar) ────────────────────────────────────────
@@ -119,6 +133,35 @@
     </div>`;
   }
 
+
+  // ── Sugestões de amigos ───────────────────────────────────────────────────
+  function renderFriendSuggestions() {
+    const container = document.getElementById("home-suggestions");
+    if (!container || !allData) return;
+    const suggestions = getFriendSuggestions(allData.friendships, allData.users, currentUser.id, 4);
+    if (!suggestions.length) { document.getElementById("suggestions-box").style.display = "none"; return; return; }
+    document.getElementById("suggestions-box").style.display = "";
+    container.innerHTML = suggestions.map(({ user: u, mutual }) => `
+      <div style="display:flex;gap:8px;align-items:center;padding:5px 0;border-bottom:1px solid #e9eaed">
+        <a href="profile.html?user=${u.id}">
+          <img src="${avatarUrl(u)}" style="width:36px;height:36px;border-radius:3px;object-fit:cover;border:1px solid #dddfe2" alt="">
+        </a>
+        <div style="flex:1;min-width:0">
+          <a href="profile.html?user=${u.id}" style="color:#365899;font-weight:bold;font-size:11px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${u.name}</a>
+          <span style="font-size:10px;color:#90949c">${mutual} amigo${mutual>1?"s":""} em comum</span>
+        </div>
+        <button class="btn btn-small btn-suggest-add" data-id="${u.id}" style="flex-shrink:0">+ Add</button>
+      </div>`).join("");
+
+    container.querySelectorAll(".btn-suggest-add").forEach(btn => {
+      btn.addEventListener("click", async () => {
+        btn.disabled = true;
+        try { await sendFriendRequest(btn.dataset.id, currentUser.id); btn.textContent = "Enviado ✓"; btn.style.color = "#5b9a3f"; }
+        catch { btn.disabled = false; }
+      });
+    });
+  }
+
   async function updateSpotify() {
     try {
       const [myNp, friendIds] = [
@@ -138,6 +181,7 @@
     allData = await fetchCommunityData();
     renderSidebar();
     renderMyCommunities();
+    renderFriendSuggestions();
 
     const friendIds = new Set(getMyFriendIds(allData.friendships, currentUser.id));
     friendIds.add(currentUser.id); // meus próprios posts também aparecem
@@ -151,7 +195,16 @@
       </p>`;
       return;
     }
+    // Preserva quais comentários estavam abertos antes do refresh
+    const openComments = new Set(
+      [...document.querySelectorAll(".comments")].filter(el => el.style.display !== "none").map(el => el.id.replace("comments-", ""))
+    );
     container.innerHTML = feedPosts.map(p => renderPost(p, allData, currentUser)).join("");
+    // Reabre comentários que estavam abertos
+    openComments.forEach(id => {
+      const el = document.getElementById(`comments-${id}`);
+      if (el) el.style.display = "block";
+    });
     bindPostActions(currentUser, refreshFeed);
   }
 
