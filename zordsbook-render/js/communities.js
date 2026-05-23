@@ -81,6 +81,9 @@
     activeCommunityId = communityId;
     const c = allData.communityById[communityId];
     if (!c) return;
+    // Atualiza URL sem recarregar — facilita compartilhar link da comunidade
+    window.history.replaceState({}, "", `communities.html?id=${communityId}`);
+    document.title = `${c.name} — ZordsBook`;
 
     document.getElementById("community-view").style.display = "none";
     document.getElementById("community-feed").style.display = "block";

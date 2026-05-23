@@ -1,3 +1,20 @@
+
+// ── Skeleton loader para posts ────────────────────────────────────────────────
+function renderPostSkeleton(count = 3) {
+  return Array.from({length: count}, () => `
+    <article class="post post-skeleton">
+      <div class="post-header">
+        <div class="skel skel-avatar"></div>
+        <div>
+          <div class="skel skel-name"></div>
+          <div class="skel skel-time"></div>
+        </div>
+      </div>
+      <div class="skel skel-text"></div>
+      <div class="skel skel-text skel-text-short"></div>
+    </article>`).join("");
+}
+
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function escapeHtml(str) {

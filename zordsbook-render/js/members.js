@@ -75,9 +75,16 @@
   }
 
   function renderMembersGrid(filter) {
-    const others = allData.users.filter(u =>
-      u.id !== currentUser.id && (!filter || u.name.toLowerCase().includes(filter.toLowerCase()))
-    );
+    const friendIds = new Set(getMyFriendIds(allData.friendships, currentUser.id));
+    const others = allData.users
+      .filter(u => u.id !== currentUser.id && (!filter || u.name.toLowerCase().includes(filter.toLowerCase())))
+      .sort((a, b) => {
+        // Amigos aparecem primeiro, depois por nome
+        const aFriend = friendIds.has(a.id) ? 0 : 1;
+        const bFriend = friendIds.has(b.id) ? 0 : 1;
+        if (aFriend !== bFriend) return aFriend - bFriend;
+        return a.name.localeCompare(b.name, "pt-BR");
+      });
     const container = document.getElementById("members-grid");
     const countEl = document.getElementById("members-count");
     if (countEl) countEl.textContent = filter ? `${others.length} resultado${others.length!==1?"s":""}` : `${others.length} membro${others.length!==1?"s":""}`;

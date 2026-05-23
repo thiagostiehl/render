@@ -438,10 +438,13 @@ function formatTime(ts) {
 }
 
 function avatarUrl(user) {
-  if (user && user.avatar) return user.avatar;
-  const initial = ((user && user.name) || "?").charAt(0).toUpperCase();
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80"><rect fill="%233b5998" width="80" height="80"/><text x="50%" y="54%" dominant-baseline="middle" text-anchor="middle" fill="white" font-size="36" font-family="Tahoma">${initial}</text></svg>`;
-  return `data:image/svg+xml,${encodeURIComponent(svg)}`;
+  if (!user) return `https://api.dicebear.com/7.x/initials/svg?seed=?&backgroundColor=3b5998&textColor=ffffff`;
+  if (user.avatar_url) return user.avatar_url;
+  const seed = encodeURIComponent(user.name || "?");
+  // Gera cor baseada no nome para consistência
+  const colors = ["3b5998","47629e","5b9a3f","8b5cf6","e67e22","e74c3c","1abc9c","2980b9"];
+  const colorIdx = (user.name || "?").charCodeAt(0) % colors.length;
+  return `https://api.dicebear.com/7.x/initials/svg?seed=${seed}&backgroundColor=${colors[colorIdx]}&textColor=ffffff`;
 }
 
 function coverStyle(user) {
@@ -470,7 +473,7 @@ function renderTopbar(activePage, user, unreadCount) {
         <nav>${links}</nav>
         <div style="display:flex;align-items:center;gap:12px">
           <div class="notif-wrap" id="notif-wrap">
-            <button class="notif-btn" id="notif-btn" title="Notificações">🔔${badge}</button>
+            <button class="notif-btn" id="notif-btn" title="Notificações"><span class="notif-z">Z</span>${badge}</button>
             <div class="notif-dropdown" id="notif-dropdown" style="display:none"></div>
           </div>
           <span class="topbar-user">Olá, <strong>${user.name}</strong> · <a href="#" id="btn-logout" style="color:#fff">Sair</a></span>
@@ -479,7 +482,12 @@ function renderTopbar(activePage, user, unreadCount) {
     </header>`;
 }
 
+// Estado global de notificações — evita re-registro de listeners e stale closures
+let _notifUser = null;
+let _notifDropdownBound = false;
+
 async function initNotifications(currentUser) {
+  _notifUser = currentUser;
   const notifs = await fetchNotifications(currentUser.id);
   const unread = notifs.filter(n => !n.read).length;
 
@@ -488,28 +496,46 @@ async function initNotifications(currentUser) {
     const activePage = document.body.dataset.page || "";
     topbarEl.innerHTML = renderTopbar(activePage, currentUser, unread);
     bindLogout();
-    bindNotifDropdown(currentUser, notifs);
+    bindNotifDropdown(currentUser);
   }
 }
 
-async function bindNotifDropdown(currentUser, notifs) {
+async function bindNotifDropdown(currentUser) {
   const btn = document.getElementById("notif-btn");
   const dropdown = document.getElementById("notif-dropdown");
   if (!btn || !dropdown) return;
 
-  btn.addEventListener("click", async (e) => {
+  // Clona o botão para remover quaisquer listeners antigos
+  const newBtn = btn.cloneNode(true);
+  btn.parentNode.replaceChild(newBtn, btn);
+
+  newBtn.addEventListener("click", async (e) => {
     e.stopPropagation();
     const isOpen = dropdown.style.display !== "none";
     dropdown.style.display = isOpen ? "none" : "block";
     if (!isOpen) {
-      renderNotifDropdown(dropdown, notifs, currentUser);
+      // Busca notificações FRESCAS a cada abertura — nunca mostra dados velhos
+      dropdown.innerHTML = `<div class="notif-empty" style="padding:20px;text-align:center">Carregando...</div>`;
+      const freshNotifs = await fetchNotifications(currentUser.id);
+      renderNotifDropdown(dropdown, freshNotifs, currentUser);
       await markNotificationsRead(currentUser.id);
+      // Remove badge
       const badge = document.querySelector(".notif-badge");
       if (badge) badge.remove();
     }
   });
 
-  document.addEventListener("click", () => { dropdown.style.display = "none"; });
+  // Um único listener de fechamento — usa flag para não duplicar
+  if (!_notifDropdownBound) {
+    _notifDropdownBound = true;
+    document.addEventListener("click", (e) => {
+      const dd = document.getElementById("notif-dropdown");
+      const nb = document.getElementById("notif-btn");
+      if (dd && !dd.contains(e.target) && e.target !== nb) {
+        dd.style.display = "none";
+      }
+    });
+  }
 }
 
 // CORRIGIDO: função única, sem duplicatas, com eventos via dataset (sem onclick inline)

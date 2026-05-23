@@ -186,7 +186,9 @@
     const friendIds = new Set(getMyFriendIds(allData.friendships, currentUser.id));
     friendIds.add(currentUser.id); // meus próprios posts também aparecem
 
-    const feedPosts = allData.posts.filter(p => !p.communityId && friendIds.has(p.userId));
+    const feedPosts = allData.posts
+      .filter(p => !p.communityId && friendIds.has(p.userId))
+      .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
     const container = document.getElementById("feed-posts");
 
     if (feedPosts.length === 0) {
@@ -250,6 +252,8 @@
       document.getElementById("post-youtube").value = "";
       document.getElementById("post-image-preview").innerHTML = "";
       await refreshFeed();
+      // Scroll suave até o primeiro post
+      document.getElementById("feed-posts")?.firstElementChild?.scrollIntoView({ behavior: "smooth", block: "start" });
     } catch (err) {
       console.error(err);
       alert("Não foi possível publicar: " + (err.message || err));
@@ -293,6 +297,8 @@
   // ── Init ──────────────────────────────────────────────────────────────────
   try {
     handleSpotifyCallback();
+    // Skeleton enquanto carrega
+    document.getElementById("feed-posts").innerHTML = renderPostSkeleton(3);
     await refreshFeed();
     await initNotifications(currentUser);
     await updateSpotify();

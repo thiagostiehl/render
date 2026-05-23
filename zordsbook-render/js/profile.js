@@ -17,6 +17,10 @@
   document.getElementById("topbar").innerHTML = renderTopbar("profile", currentUser, 0);
   bindLogout();
   document.title = `${profileUser.name} — ZordsBook`;
+  // Meta description dinâmica (SEO / compartilhamento)
+  let metaDesc = document.querySelector("meta[name=description]");
+  if (!metaDesc) { metaDesc = document.createElement("meta"); metaDesc.name = "description"; document.head.appendChild(metaDesc); }
+  metaDesc.content = profileUser.bio ? `${profileUser.name}: ${profileUser.bio}` : `Perfil de ${profileUser.name} no ZordsBook`;
 
   // ── Capa ──────────────────────────────────────────────────────────────────
   function renderCover() {
