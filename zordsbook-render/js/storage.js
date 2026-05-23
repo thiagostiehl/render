@@ -444,7 +444,10 @@ function formatTime(ts) {
 
 function avatarUrl(user) {
   if (!user) return `https://api.dicebear.com/7.x/initials/svg?seed=?`;
-  if (user.avatar_url) return user.avatar_url;
+  // user.avatar = campo do profileToUser local
+  // user.avatar_url = campo direto do Supabase (joins, notificações)
+  const url = user.avatar || user.avatar_url || "";
+  if (url) return url;
   return `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(user.name || "?")}`;
 }
 
@@ -543,8 +546,8 @@ function renderNotifDropdown(dropdown, notifs, currentUser) {
 
     if (notif.kind === "friend_request") {
       return `
-        <div class="notification-item" data-id="${notif.id}">
-          <img src="${actorAvatar}" class="notif-avatar" alt="">
+        <div class="notification-item" data-id="${notif.id}" data-kind="friend_request">
+          <a href="profile.html?user=${notif.actor_id}"><img src="${actorAvatar}" class="notif-avatar" alt=""></a>
           <div class="notif-content">
             <strong>${actorName}</strong> quer ser seu amigo
             <div class="notif-actions">
@@ -618,20 +621,22 @@ async function acceptFriendFromNotif(notifId, requesterId) {
   const myId = getCurrentUser()?.id;
   const success = await acceptFriendRequest(requesterId, myId);
   if (success) {
-    await markNotificationAsRead(notifId);
-    const item = document.querySelector(`.notification-item[data-id="${notifId}"]`);
-    if (item) item.remove();
-    const dropdown = document.getElementById("notif-dropdown");
-    if (dropdown && !dropdown.querySelector(".notification-item")) {
-      dropdown.innerHTML = `<div class="notif-empty">Nenhuma notificação nova.</div>`;
-    }
+    // Deleta a notificação do banco — não volta nunca mais
+    const sb = getSupabase();
+    await sb.from("notifications").delete().eq("id", notifId);
+    removeNotifItem(notifId);
   } else {
     alert("❌ Não foi possível aceitar. Tente pela página Membros.");
   }
 }
 
 async function rejectFriendFromNotif(notifId) {
-  await markNotificationAsRead(notifId);
+  const sb = getSupabase();
+  await sb.from("notifications").delete().eq("id", notifId);
+  removeNotifItem(notifId);
+}
+
+function removeNotifItem(notifId) {
   const item = document.querySelector(`.notification-item[data-id="${notifId}"]`);
   if (item) item.remove();
   const dropdown = document.getElementById("notif-dropdown");
