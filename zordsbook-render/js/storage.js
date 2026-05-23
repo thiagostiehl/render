@@ -643,11 +643,15 @@ async function acceptFriendFromNotif(notifId, requesterId) {
   const myId = getCurrentUser()?.id;
   const success = await acceptFriendRequest(requesterId, myId);
   if (success) {
-    // Deleta a notificação do banco — não volta nunca mais
     const sb = getSupabase();
     await sb.from("notifications").delete().eq("id", notifId);
-    removeNotifItem(notifId);
-    // Atualiza o badge no topbar
+    // Recarrega o dropdown inteiro para refletir o estado real do banco
+    const dropdown = document.getElementById("notif-dropdown");
+    if (dropdown) {
+      dropdown.innerHTML = `<div style="padding:16px;text-align:center;color:#90949c;font-size:11px">Carregando...</div>`;
+      const fresh = await fetchNotifications(myId);
+      renderNotifDropdown(dropdown, fresh, getCurrentUser());
+    }
     refreshNotifBadge(myId);
   } else {
     alert("❌ Não foi possível aceitar. Tente pela página Membros.");
