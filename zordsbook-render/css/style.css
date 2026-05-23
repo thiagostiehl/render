@@ -1209,3 +1209,205 @@ mark {
   padding: 0 1px;
   border-radius: 2px;
 }
+
+
+/* ════════════════════════════════════════════════════════════
+   TALENTO MASTER — Harvard Edition
+   ════════════════════════════════════════════════════════════ */
+
+/* ── Z notification button ─────────────────────────────────── */
+.notif-z {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 20px;
+  font-weight: bold;
+  font-style: italic;
+  color: #fff;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.4), 0 0 8px rgba(255,255,255,0.3);
+  letter-spacing: -1px;
+  display: inline-block;
+  transition: transform 0.2s;
+}
+.notif-btn:hover .notif-z {
+  transform: rotate(-8deg) scale(1.1);
+}
+
+/* ── Skeleton loader ────────────────────────────────────────── */
+.post-skeleton {
+  pointer-events: none;
+}
+.skel {
+  border-radius: 3px;
+  background: linear-gradient(90deg, #e9eaed 25%, #f5f5f5 50%, #e9eaed 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s infinite;
+}
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+.skel-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+.skel-name {
+  width: 120px;
+  height: 11px;
+  margin-bottom: 5px;
+}
+.skel-time {
+  width: 70px;
+  height: 9px;
+}
+.skel-text {
+  height: 11px;
+  margin: 10px 0 0 48px;
+  width: 90%;
+}
+.skel-text-short {
+  width: 60%;
+  margin-top: 6px;
+}
+
+/* ── Posts: animação de entrada ─────────────────────────────── */
+@keyframes fadeSlideIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.post {
+  animation: fadeSlideIn 0.18s ease-out both;
+}
+
+/* ── Topbar: sombra mais sofisticada ────────────────────────── */
+.topbar {
+  box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+}
+
+/* ── Logo com gradiente de texto ────────────────────────────── */
+.logo {
+  background: linear-gradient(135deg, #fff 60%, #a8c0e8);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-fill-color: transparent;
+  filter: drop-shadow(0 1px 2px rgba(0,0,0,0.3));
+}
+
+/* ── Box com hover shadow ────────────────────────────────────── */
+.box {
+  transition: box-shadow 0.15s;
+}
+
+/* ── Composer: textarea com resize proibido + altura animada ─── */
+.composer textarea {
+  resize: none;
+  transition: min-height 0.2s ease;
+  border-radius: 3px;
+}
+.composer textarea:focus {
+  min-height: 80px;
+}
+
+/* ── Botão publicar: efeito de ripple ───────────────────────── */
+.btn {
+  position: relative;
+  overflow: hidden;
+  transition: background 0.15s, transform 0.1s;
+}
+.btn:active {
+  transform: scale(0.97);
+}
+
+/* ── Post actions: espaçamento e alinhamento melhor ─────────── */
+.post-actions {
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px solid #f0f2f5;
+}
+
+/* ── Comentários: transição suave ao abrir ──────────────────── */
+.comments {
+  border-radius: 4px;
+  transition: all 0.15s ease;
+}
+
+/* ── Notif dropdown: animação de entrada ────────────────────── */
+.notif-dropdown[style*="block"] {
+  animation: dropdownIn 0.15s ease-out;
+}
+@keyframes dropdownIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Notif header ─────────────────────────────────────────────── */
+.notif-dropdown::before {
+  content: "Notificações";
+  display: block;
+  background: linear-gradient(#4e69a2, #3b5998);
+  color: #fff;
+  font-weight: bold;
+  font-size: 11px;
+  padding: 8px 12px;
+  letter-spacing: 0.3px;
+}
+
+/* ── Community cards: hover elevation ───────────────────────── */
+.community-orkut-card a:hover .community-orkut-icon {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+.community-orkut-icon {
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+
+/* ── Profile cover: gradiente mais sofisticado ──────────────── */
+.profile-cover {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #3b5998 100%);
+}
+
+/* ── Reaction count: badge pill ─────────────────────────────── */
+.reaction-count {
+  background: rgba(0,0,0,0.08);
+  border-radius: 8px;
+  padding: 0 4px;
+  font-size: 10px;
+}
+
+/* ── Chat: status de digitação (para futuro) ─────────────────── */
+.chat-typing {
+  font-style: italic;
+  color: #8aabbf;
+  font-size: 11px;
+  padding: 4px 12px;
+}
+
+/* ── Scrollbar fina colorida ─────────────────────────────────── */
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(#7b93c9, #4f6aa3);
+}
+
+/* ── Friend list sidebar: sem border-bottom no último ─────────── */
+.friend-list li:last-child { border-bottom: none; }
+
+/* ── Página de login: card mais elegante ─────────────────────── */
+.login-box {
+  box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+  border-radius: 6px;
+}
+
+/* ── Input focus global mais consistente ─────────────────────── */
+input:focus, textarea:focus, select:focus {
+  outline: none;
+  border-color: #7b93c9 !important;
+  box-shadow: 0 0 0 2px rgba(59,89,152,0.15);
+}
+
+/* ── Toasts / alerts visuais ─────────────────────────────────── */
+.toast {
+  border-radius: 6px;
+  font-size: 12px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+}
