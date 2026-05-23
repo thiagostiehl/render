@@ -1106,3 +1106,106 @@ a:hover {
   text-overflow: ellipsis;
   max-width: 100%;
 }
+
+
+/* ── Lapidada geral ─────────────────────────────────────────────── */
+
+/* Post: hover sutil */
+.post {
+  transition: background 0.1s;
+}
+.post:hover {
+  background: #fafbfc;
+}
+
+/* Composer textarea focus */
+.composer textarea:focus,
+.comment-form input:focus {
+  outline: none;
+  border-color: #7b93c9;
+  box-shadow: 0 0 0 2px rgba(59,89,152,0.12);
+}
+
+/* Avatar do post maior com borda */
+.post-avatar {
+  border: 1px solid #dddfe2;
+}
+
+/* Depoimentos com avatar do autor */
+.testimonial {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+.testimonial-body { flex: 1; }
+
+/* Botão Publicar com estado loading */
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Campo de busca de membros */
+#search-members {
+  width: 100%;
+  padding: 6px 10px;
+  border: 1px solid #bdc7d8;
+  border-radius: 3px;
+  font-family: inherit;
+  font-size: 11px;
+  margin-bottom: 10px;
+  transition: border-color 0.15s;
+}
+#search-members:focus {
+  outline: none;
+  border-color: #7b93c9;
+  box-shadow: 0 0 0 2px rgba(59,89,152,0.12);
+}
+
+/* Stats do perfil */
+#profile-stats {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  margin-top: 4px;
+}
+
+/* Topbar: link ativo com underline */
+.topbar nav a.active {
+  border-bottom: 2px solid rgba(255,255,255,0.7);
+  padding-bottom: 2px;
+}
+
+/* Notif badge animado */
+.notif-badge {
+  animation: pulse-badge 2s infinite;
+}
+@keyframes pulse-badge {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.15); }
+}
+
+/* Post media com sombra sutil */
+.post-media {
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+}
+
+/* Scrollbar fina global */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: #f1f1f1; }
+::-webkit-scrollbar-thumb { background: #bdc7d8; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #90949c; }
+
+/* Mini perfil sidebar: avatar responsivo */
+.mini-profile img {
+  border-radius: 4px;
+  transition: opacity 0.15s;
+}
+.mini-profile img:hover { opacity: 0.9; }
+
+/* Marca no resultado de busca */
+mark {
+  background: #fff3cd;
+  padding: 0 1px;
+  border-radius: 2px;
+}
