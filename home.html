@@ -9,6 +9,12 @@
 <body>
 
   <div id="topbar"></div>
+  <div id="activity-ticker" class="activity-ticker" style="display:none">
+    <span class="ticker-label">🔴 AO VIVO</span>
+    <div class="ticker-track">
+      <div class="ticker-content" id="ticker-content"></div>
+    </div>
+  </div>
 
   <main class="page-wrap">
 
@@ -72,6 +78,10 @@
         <div class="community-grid" id="home-my-communities">
           <p style="color:#90949c;font-size:10px">Carregando...</p>
         </div>
+      </div>
+      <div class="box" id="suggestions-box" style="display:none">
+        <h3>Pessoas que você pode conhecer</h3>
+        <div id="home-suggestions"></div>
       </div>
       <div class="box">
         <h3>Atalhos</h3>
