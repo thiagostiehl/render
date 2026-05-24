@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Watch Party — ZordsBook</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .wp-wrap {
+      max-width: 980px;
+      margin: 16px auto;
+      padding: 0 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .wp-header-box {
+      background: #1a3a6c;
+      border-radius: 3px;
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .wp-header-box h2 {
+      color: #fff;
+      font-size: 14px;
+      margin: 0;
+    }
+    .wp-header-box h2 span { color: #5bc8f5; }
+    .wp-live-badge {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      color: #5bc8f5;
+    }
+    .wp-live-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: #5bc8f5;
+      animation: wpPulse 1.2s infinite;
+    }
+    @keyframes wpPulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+    .wp-main { display: grid; grid-template-columns: 1fr 260px; gap: 10px; }
+
+    .wp-video-col {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .wp-video-box {
+      background: #000;
+      border-radius: 3px;
+      overflow: hidden;
+      border: 1px solid #bdc7d8;
+    }
+    .wp-iframe-wrap { position: relative; padding-top: 56.25%; background: #111; }
+    .wp-iframe-wrap iframe {
+      position: absolute; top: 0; left: 0;
+      width: 100%; height: 100%; border: none;
+    }
+    .wp-placeholder {
+      position: absolute; top: 0; left: 0;
+      width: 100%; height: 100%;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 8px; color: #555;
+    }
+    .wp-placeholder p { font-size: 12px; }
+    .wp-now-playing {
+      background: #111;
+      padding: 7px 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-height: 34px;
+      border-top: 1px solid #222;
+    }
+    .wp-np-label { font-size: 11px; color: #5bc8f5; font-weight: bold; white-space: nowrap; }
+    .wp-np-title { font-size: 12px; color: #ccc; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .wp-np-who { font-size: 11px; color: #888; white-space: nowrap; }
+    .wp-np-who span { color: #f5a05b; font-weight: bold; }
+    .wp-sync-bar {
+      background: #1a2a1a;
+      border: 1px solid #2a4a2a;
+      border-radius: 3px;
+      padding: 6px 12px;
+      font-size: 11px;
+      color: #7fd47f;
+      display: none;
+      align-items: center;
+      gap: 8px;
+    }
+    .wp-add-box {
+      background: #fff;
+      border: 1px solid #bdc7d8;
+      border-radius: 3px;
+      padding: 10px;
+    }
+    .wp-add-box h3 {
+      font-size: 11px;
+      color: #90949c;
+      margin-bottom: 8px;
+      font-weight: bold;
+    }
+    .wp-add-row { display: flex; gap: 6px; }
+    .wp-add-input {
+      flex: 1;
+      padding: 5px 8px;
+      border: 1px solid #bdc7d8;
+      border-radius: 2px;
+      font-size: 11px;
+      font-family: inherit;
+    }
+    .wp-add-input:focus { outline: none; border-color: #1a6fc4; }
+    .wp-add-btn {
+      background: #1a6fc4;
+      color: #fff;
+      border: none;
+      border-radius: 2px;
+      padding: 5px 12px;
+      font-size: 11px;
+      font-weight: bold;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .wp-add-btn:hover { background: #145da0; }
+
+    .wp-right-col { display: flex; flex-direction: column; gap: 10px; }
+
+    .wp-queue-box, .wp-chat-box {
+      background: #fff;
+      border: 1px solid #bdc7d8;
+      border-radius: 3px;
+    }
+    .wp-box-header {
+      padding: 8px 10px;
+      border-bottom: 1px solid #bdc7d8;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 11px;
+      font-weight: bold;
+      color: #90949c;
+    }
+    .wp-queue-badge {
+      background: #1a6fc4;
+      color: #fff;
+      border-radius: 10px;
+      padding: 1px 7px;
+      font-size: 10px;
+    }
+    .wp-queue-list { max-height: 200px; overflow-y: auto; }
+    .wp-queue-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 10px;
+      border-bottom: 1px solid #f0f2f5;
+      cursor: pointer;
+      font-size: 11px;
+    }
+    .wp-queue-item:hover { background: #f7f8fa; }
+    .wp-queue-item.active { background: #e8f0fb; border-left: 2px solid #1a6fc4; }
+    .wp-qi-num { color: #bbb; min-width: 14px; font-size: 10px; }
+    .wp-qi-thumb { width: 40px; height: 28px; border-radius: 2px; object-fit: cover; background: #eee; flex-shrink: 0; }
+    .wp-qi-info { flex: 1; min-width: 0; }
+    .wp-qi-title { color: #1c1e21; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .wp-qi-who { font-size: 10px; color: #90949c; margin-top: 1px; }
+    .wp-qi-who span { color: #f5a05b; }
+    .wp-qi-remove {
+      color: #bbb; font-size: 13px; cursor: pointer;
+      background: none; border: none; padding: 2px 4px;
+    }
+    .wp-qi-remove:hover { color: #e02424; }
+    .wp-empty { padding: 12px 10px; font-size: 11px; color: #90949c; text-align: center; }
+
+    .wp-chat-box { display: flex; flex-direction: column; flex: 1; }
+    .wp-chat-msgs {
+      height: 220px;
+      overflow-y: auto;
+      padding: 8px 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .wp-msg { display: flex; flex-direction: column; gap: 1px; }
+    .wp-msg-user { font-size: 11px; font-weight: bold; }
+    .wp-msg-text { font-size: 11px; color: #555; line-height: 1.4; }
+    .wp-msg-system { font-size: 10px; color: #90949c; font-style: italic; }
+
+    .wp-reactions {
+      display: flex; gap: 4px; padding: 5px 8px;
+      border-top: 1px solid #f0f2f5;
+    }
+    .wp-react-btn {
+      background: #f0f2f5; border: 1px solid #ddd;
+      border-radius: 20px; padding: 2px 7px; font-size: 13px;
+      cursor: pointer; transition: transform .1s;
+    }
+    .wp-react-btn:hover { transform: scale(1.2); }
+
+    .wp-chat-input-row {
+      display: flex; gap: 5px; padding: 7px 8px;
+      border-top: 1px solid #bdc7d8;
+    }
+    .wp-chat-input {
+      flex: 1; border: 1px solid #bdc7d8; border-radius: 2px;
+      padding: 4px 7px; font-size: 11px; font-family: inherit;
+    }
+    .wp-chat-input:focus { outline: none; border-color: #1a6fc4; }
+    .wp-chat-send {
+      background: #1a6fc4; color: #fff; border: none;
+      border-radius: 2px; padding: 4px 10px; font-size: 11px;
+      cursor: pointer;
+    }
+    .wp-chat-send:hover { background: #145da0; }
+
+    .wp-float {
+      position: fixed; pointer-events: none; font-size: 22px;
+      animation: wpFloat 2s ease-out forwards; z-index: 9999;
+    }
+    @keyframes wpFloat {
+      0%{opacity:1;transform:translateY(0) scale(1)}
+      100%{opacity:0;transform:translateY(-100px) scale(1.5)}
+    }
+  </style>
+</head>
+<body>
+
+<div id="topbar"></div>
+<div id="activity-ticker" class="activity-ticker" style="display:none">
+  <span class="ticker-label">🔴 AO VIVO</span>
+  <div class="ticker-track"><div class="ticker-content" id="ticker-content"></div></div>
+</div>
+
+<div class="wp-wrap">
+  <div class="wp-header-box">
+    <h2>Zords<span>Book</span> Watch Party 🎬</h2>
+    <div class="wp-live-badge">
+      <div class="wp-live-dot"></div>
+      <span id="wpViewers">carregando...</span>
+    </div>
+  </div>
+
+  <div class="wp-main">
+    <!-- COLUNA DO VÍDEO -->
+    <div class="wp-video-col">
+      <div class="wp-video-box">
+        <div class="wp-iframe-wrap">
+          <div class="wp-placeholder" id="wpPlaceholder">
+            <p style="font-size:28px">🎬</p>
+            <p>Adicione um vídeo na fila para começar!</p>
+          </div>
+        </div>
+        <div class="wp-now-playing" id="wpNowPlaying">
+          <span class="wp-np-label">▶ tocando agora</span>
+          <span class="wp-np-title" id="wpNpTitle">—</span>
+          <span class="wp-np-who">por <span id="wpNpWho">—</span></span>
+        </div>
+      </div>
+
+      <div class="wp-sync-bar" id="wpSyncBar">
+        🟢 Sincronizado com a sala — todos estão na mesma minutagem.
+      </div>
+
+      <div class="wp-add-box">
+        <h3>Adicionar vídeo à fila</h3>
+        <div class="wp-add-row">
+          <input class="wp-add-input" id="wpUrlInput" placeholder="Cole o link do YouTube..." />
+          <button class="wp-add-btn" onclick="addToQueue()">+ Adicionar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- COLUNA DIREITA -->
+    <div class="wp-right-col">
+      <!-- FILA -->
+      <div class="wp-queue-box">
+        <div class="wp-box-header">
+          <span>📋 Fila de vídeos</span>
+          <span class="wp-queue-badge" id="wpQueueCount">0</span>
+        </div>
+        <div class="wp-queue-list" id="wpQueueList">
+          <div class="wp-empty">fila vazia — seja o primeiro!</div>
+        </div>
+      </div>
+
+      <!-- CHAT -->
+      <div class="wp-chat-box">
+        <div class="wp-box-header">💬 Chat ao vivo</div>
+        <div class="wp-chat-msgs" id="wpChatMsgs"></div>
+        <div class="wp-reactions">
+          <button class="wp-react-btn" onclick="sendReact('🔥')">🔥</button>
+          <button class="wp-react-btn" onclick="sendReact('😂')">😂</button>
+          <button class="wp-react-btn" onclick="sendReact('👏')">👏</button>
+          <button class="wp-react-btn" onclick="sendReact('😮')">😮</button>
+          <button class="wp-react-btn" onclick="sendReact('🤙')">🤙</button>
+        </div>
+        <div class="wp-chat-input-row">
+          <input class="wp-chat-input" id="wpChatInput" placeholder="Mensagem..." onkeydown="if(event.key==='Enter')sendChatMsg()" />
+          <button class="wp-chat-send" onclick="sendChatMsg()">Enviar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<p class="footer-note">ZordsBook · só pra nós</p>
+
+<audio id="notifSound" preload="auto">
+  <source src="https://zrtcrowfyzbleiilxcej.supabase.co/storage/v1/object/public/assets/msn.mp3" type="audio/mpeg">
+</audio>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/config.js"></script>
+<script src="js/supabase-client.js"></script>
+<script src="js/storage.js"></script>
+<script src="js/home.js"></script>
+<script src="js/chat.js"></script>
+
+<script>
+(async function initWatchParty() {
+  if (!isConfigured()) { window.location.href = 'index.html'; return; }
+  const currentUser = await requireAuth();
+  if (!currentUser) return;
+
+  document.getElementById('topbar').innerHTML = renderTopbar('home', currentUser, 0);
+  bindLogout();
+
+  const supabase = getSupabase();
+  const ROOM_ID_KEY = 'wp_room_id';
+
+  // ── Perfil do usuário atual ───────────────────────────────────────────────
+  const { data: myProfile } = await supabase
+    .from('profiles')
+    .select('id, name, avatar_url')
+    .eq('id', currentUser.id)
+    .single();
+  const myName = myProfile?.name || 'Você';
+
+  // ── Cor por nome ──────────────────────────────────────────────────────────
+  const COLORS = ['#1a6fc4','#d44f00','#2a7a2a','#8a2a8a','#a06000','#c4401a'];
+  function colorFor(name) {
+    let h = 0;
+    for (const c of (name || '')) h = (h * 31 + c.charCodeAt(0)) % COLORS.length;
+    return COLORS[h];
+  }
+
+  // ── Extrai video_id do YouTube ────────────────────────────────────────────
+  function extractVideoId(url) {
+    const m = url.match(/(?:v=|youtu\.be\/|embed\/)([a-zA-Z0-9_-]{11})/);
+    return m ? m[1] : null;
+  }
+
+  // ── Obtém ou cria sala única ──────────────────────────────────────────────
+  let roomId = localStorage.getItem(ROOM_ID_KEY);
+  if (!roomId) {
+    // tenta buscar sala existente
+    const { data: existing } = await supabase
+      .from('watch_rooms')
+      .select('id')
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single();
+    if (existing) {
+      roomId = existing.id;
+    } else {
+      const { data: created } = await supabase
+        .from('watch_rooms')
+        .insert({ name: 'Sala ZordsBook', created_by: currentUser.id })
+        .select('id')
+        .single();
+      roomId = created?.id;
+    }
+    if (roomId) localStorage.setItem(ROOM_ID_KEY, roomId);
+  }
+
+  if (!roomId) {
+    addChatMsg('Sistema', 'Erro ao conectar à sala.', '#e02424', true);
+    return;
+  }
+
+  // ── Estado local ──────────────────────────────────────────────────────────
+  let queue = [];           // itens da fila com perfil do dono
+  let currentQueueId = null;
+  let profiles = {};        // cache de perfis
+
+  // ── Carrega perfis de todos ───────────────────────────────────────────────
+  async function loadProfiles() {
+    const { data } = await supabase.from('profiles').select('id, name, avatar_url');
+    if (data) data.forEach(p => { profiles[p.id] = p; });
+  }
+
+  // ── Carrega fila do Supabase ──────────────────────────────────────────────
+  async function loadQueue() {
+    const { data } = await supabase
+      .from('watch_queue')
+      .select('id, video_id, added_by, position, created_at')
+      .eq('room_id', roomId)
+      .order('position', { ascending: true });
+    queue = data || [];
+    renderQueue();
+  }
+
+  // ── Carrega sala (vídeo atual + started_at) ───────────────────────────────
+  async function loadRoom() {
+    const { data: room } = await supabase
+      .from('watch_rooms')
+      .select('current_video_id, current_video_added_by, started_at')
+      .eq('id', roomId)
+      .single();
+    if (room && room.current_video_id) {
+      playVideo(room.current_video_id, room.current_video_added_by, room.started_at, false);
+    }
+  }
+
+  // ── Renderiza fila ────────────────────────────────────────────────────────
+  function renderQueue() {
+    const list = document.getElementById('wpQueueList');
+    document.getElementById('wpQueueCount').textContent = queue.length;
+    if (!queue.length) {
+      list.innerHTML = '<div class="wp-empty">fila vazia — seja o primeiro!</div>';
+      return;
+    }
+    list.innerHTML = queue.map((item, i) => {
+      const owner = profiles[item.added_by];
+      const ownerName = owner?.name || 'Alguém';
+      const thumb = `https://img.youtube.com/vi/${item.video_id}/mqdefault.jpg`;
+      const isActive = item.id === currentQueueId;
+      return `
+        <div class="wp-queue-item${isActive ? ' active' : ''}" onclick="playFromQueue('${item.id}','${item.video_id}','${item.added_by}')">
+          <span class="wp-qi-num">${i + 1}</span>
+          <img class="wp-qi-thumb" src="${thumb}" onerror="this.style.opacity=0" />
+          <div class="wp-qi-info">
+            <div class="wp-qi-title">${isActive ? '▶ ' : ''}vídeo ${i + 1}</div>
+            <div class="wp-qi-who">por <span>${ownerName}</span></div>
+          </div>
+          <button class="wp-qi-remove" onclick="removeFromQueue(event,'${item.id}')">✕</button>
+        </div>`;
+    }).join('');
+  }
+
+  // ── Toca vídeo com sincronização por timestamp ────────────────────────────
+  function playVideo(videoId, addedById, startedAt, updateRoom) {
+    const wrap = document.querySelector('.wp-iframe-wrap');
+    const ph = document.getElementById('wpPlaceholder');
+    if (ph) ph.remove();
+
+    // calcula segundos decorridos desde o início
+    let startSec = 0;
+    if (startedAt) {
+      const elapsed = Math.floor((Date.now() - new Date(startedAt).getTime()) / 1000);
+      startSec = Math.max(0, elapsed);
+    }
+
+    let iframe = wrap.querySelector('iframe');
+    if (!iframe) {
+      iframe = document.createElement('iframe');
+      iframe.allow = 'autoplay; encrypted-media';
+      wrap.appendChild(iframe);
+    }
+    iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&start=${startSec}`;
+
+    // nome de quem adicionou
+    const ownerName = addedById ? (profiles[addedById]?.name || '...') : '—';
+    document.getElementById('wpNpTitle').textContent = 'Vídeo na fila';
+    document.getElementById('wpNpWho').textContent = ownerName;
+
+    // mostra barra de sincronização
+    const syncBar = document.getElementById('wpSyncBar');
+    syncBar.style.display = 'flex';
+    setTimeout(() => { syncBar.style.display = 'none'; }, 5000);
+
+    if (updateRoom) {
+      supabase.from('watch_rooms').update({
+        current_video_id: videoId,
+        current_video_added_by: addedById,
+        started_at: new Date().toISOString()
+      }).eq('id', roomId).then(() => {});
+    }
+  }
+
+  // ── Tocar da fila (clique manual) ─────────────────────────────────────────
+  window.playFromQueue = function(queueItemId, videoId, addedById) {
+    currentQueueId = queueItemId;
+    renderQueue();
+    playVideo(videoId, addedById, null, true);
+    addChatMsg('Sistema', `${myName} pulou para o próximo vídeo.`, '#90949c', true);
+  };
+
+  // ── Adicionar à fila ──────────────────────────────────────────────────────
+  window.addToQueue = async function() {
+    const input = document.getElementById('wpUrlInput');
+    const url = input.value.trim();
+    const videoId = extractVideoId(url);
+    if (!videoId) {
+      input.style.borderColor = '#e02424';
+      setTimeout(() => { input.style.borderColor = ''; }, 1500);
+      return;
+    }
+    input.value = '';
+    input.style.borderColor = '';
+
+    const nextPos = queue.length ? Math.max(...queue.map(q => q.position)) + 1 : 0;
+
+    const { data, error } = await supabase
+      .from('watch_queue')
+      .insert({ room_id: roomId, video_id: videoId, added_by: currentUser.id, position: nextPos })
+      .select('id, video_id, added_by, position, created_at')
+      .single();
+
+    if (error) { addChatMsg('Sistema', 'Erro ao adicionar vídeo.', '#e02424', true); return; }
+
+    // se não há nada tocando, começa agora
+    if (!document.querySelector('.wp-iframe-wrap iframe')) {
+      currentQueueId = data.id;
+      playVideo(data.video_id, data.added_by, null, true);
+    }
+  };
+
+  // ── Remover da fila ───────────────────────────────────────────────────────
+  window.removeFromQueue = async function(e, queueItemId) {
+    e.stopPropagation();
+    await supabase.from('watch_queue').delete().eq('id', queueItemId);
+  };
+
+  // ── Chat: enviar mensagem ─────────────────────────────────────────────────
+  window.sendChatMsg = async function() {
+    const input = document.getElementById('wpChatInput');
+    const text = input.value.trim();
+    if (!text) return;
+    input.value = '';
+    await supabase.from('watch_messages')
+      .insert({ room_id: roomId, user_id: currentUser.id, text });
+  };
+
+  // ── Chat: reações ─────────────────────────────────────────────────────────
+  window.sendReact = async function(emoji) {
+    // efeito visual local imediato
+    fireFloatEmoji(emoji);
+    await supabase.from('watch_messages')
+      .insert({ room_id: roomId, user_id: currentUser.id, text: emoji });
+  };
+
+  function fireFloatEmoji(emoji) {
+    const el = document.createElement('div');
+    el.className = 'wp-float';
+    el.textContent = emoji;
+    el.style.left = (Math.random() * 50 + 20) + 'vw';
+    el.style.top = '60vh';
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 2000);
+  }
+
+  // ── Renderiza mensagem no chat ────────────────────────────────────────────
+  function addChatMsg(name, text, color, isSystem) {
+    const msgs = document.getElementById('wpChatMsgs');
+    const div = document.createElement('div');
+    div.className = 'wp-msg';
+    if (isSystem) {
+      div.innerHTML = `<span class="wp-msg-system">${text}</span>`;
+    } else {
+      div.innerHTML = `<span class="wp-msg-user" style="color:${color}">${name}</span><span class="wp-msg-text">${text}</span>`;
+    }
+    msgs.appendChild(div);
+    msgs.scrollTop = msgs.scrollHeight;
+  }
+
+  // ── Carrega mensagens antigas ─────────────────────────────────────────────
+  async function loadMessages() {
+    const { data } = await supabase
+      .from('watch_messages')
+      .select('id, user_id, text, created_at')
+      .eq('room_id', roomId)
+      .order('created_at', { ascending: true })
+      .limit(50);
+    if (data) {
+      data.forEach(msg => {
+        const profile = profiles[msg.user_id];
+        const name = profile?.name || 'Alguém';
+        addChatMsg(name, msg.text, colorFor(name), false);
+      });
+    }
+  }
+
+  // ── Realtime: mensagens ───────────────────────────────────────────────────
+  supabase.channel('watch_messages_' + roomId)
+    .on('postgres_changes', {
+      event: 'INSERT',
+      schema: 'public',
+      table: 'watch_messages',
+      filter: `room_id=eq.${roomId}`
+    }, payload => {
+      const msg = payload.new;
+      if (msg.user_id === currentUser.id) return; // já foi renderizado via sendReact
+      const profile = profiles[msg.user_id];
+      const name = profile?.name || 'Alguém';
+      // emoji de reação → efeito visual
+      if (['🔥','😂','👏','😮','🤙'].includes(msg.text)) fireFloatEmoji(msg.text);
+      addChatMsg(name, msg.text, colorFor(name), false);
+    })
+    .subscribe();
+
+  // ── Realtime: fila ────────────────────────────────────────────────────────
+  supabase.channel('watch_queue_' + roomId)
+    .on('postgres_changes', {
+      event: '*',
+      schema: 'public',
+      table: 'watch_queue',
+      filter: `room_id=eq.${roomId}`
+    }, async payload => {
+      await loadQueue();
+      if (payload.eventType === 'INSERT') {
+        const item = payload.new;
+        const owner = profiles[item.added_by] || await supabase.from('profiles').select('id,name').eq('id', item.added_by).single().then(r => { profiles[item.added_by] = r.data; return r.data; });
+        const ownerName = owner?.name || 'Alguém';
+        addChatMsg('Sistema', `${ownerName} adicionou um vídeo na fila!`, '#90949c', true);
+        // auto-play se não tem nada tocando
+        if (!document.querySelector('.wp-iframe-wrap iframe') && !currentQueueId) {
+          currentQueueId = item.id;
+          playVideo(item.video_id, item.added_by, null, true);
+        }
+      }
+    })
+    .subscribe();
+
+  // ── Realtime: sala (troca de vídeo por outro usuário) ────────────────────
+  supabase.channel('watch_room_' + roomId)
+    .on('postgres_changes', {
+      event: 'UPDATE',
+      schema: 'public',
+      table: 'watch_rooms',
+      filter: `id=eq.${roomId}`
+    }, payload => {
+      const room = payload.new;
+      if (room.current_video_id) {
+        // outro usuário trocou o vídeo — sincroniza com o started_at deles
+        const iframe = document.querySelector('.wp-iframe-wrap iframe');
+        const isSameVideo = iframe && iframe.src.includes(room.current_video_id);
+        if (!isSameVideo) {
+          playVideo(room.current_video_id, room.current_video_added_by, room.started_at, false);
+          addChatMsg('Sistema', 'Vídeo trocado — sincronizando a sala!', '#90949c', true);
+        }
+      }
+    })
+    .subscribe();
+
+  // ── Viewers (contagem simples com presence) ───────────────────────────────
+  const presenceChannel = supabase.channel('wp_presence_' + roomId, {
+    config: { presence: { key: currentUser.id } }
+  });
+  presenceChannel
+    .on('presence', { event: 'sync' }, () => {
+      const state = presenceChannel.presenceState();
+      const count = Object.keys(state).length;
+      document.getElementById('wpViewers').textContent = `${count} assistindo`;
+    })
+    .subscribe(async status => {
+      if (status === 'SUBSCRIBED') {
+        await presenceChannel.track({ user_id: currentUser.id, name: myName });
+      }
+    });
+
+  // ── Init ──────────────────────────────────────────────────────────────────
+  await loadProfiles();
+  await loadQueue();
+  await loadRoom();
+  await loadMessages();
+  addChatMsg('Sistema', `Bem-vindo à Watch Party, ${myName}! 🎬`, '#1a6fc4', true);
+
+})();
+</script>
+
+</body>
+</html>
