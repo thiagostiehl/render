@@ -478,6 +478,7 @@ function renderTopbar(activePage, user, unreadCount) {
     { id: "home", label: "Início", href: "home.html" },
     { id: "members", label: "Membros", href: "members.html" },
     { id: "communities", label: "Comunidades", href: "communities.html" },
+    { id: "watchparty", label: "🎬 Watch Party", href: "watchparty.html" },
     { id: "profile", label: "Perfil", href: "profile.html" },
   ];
   const links = pages.map(p =>
