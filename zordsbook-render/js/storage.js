@@ -147,6 +147,7 @@ async function fetchCommunityData() {
     function contadorDePosts () {
       const x = posts.length
       console.log('Número de posts:', x); 
+    }
   
 }
 
