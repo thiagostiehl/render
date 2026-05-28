@@ -146,9 +146,8 @@ async function fetchCommunityData() {
     testimonials, friendships, selectedCommunityId: getSelectedCommunityId(),
   };
 
-    function contadorDePosts () {
-      const x = posts.length
-      console.log('Número de posts:', x); 
+  console.log('Número de amizades:', friendships.length)
+   console.log('Número de posts:', communities.length)
     }
   
 }
