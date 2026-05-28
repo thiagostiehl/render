@@ -143,6 +143,11 @@ async function fetchCommunityData() {
     users, userById, posts, communities, communityById, communityMembers,
     testimonials, friendships, selectedCommunityId: getSelectedCommunityId(),
   };
+
+    function contadorDePosts () {
+      const x = posts.length
+      console.log('Número de posts:', x); 
+  
 }
 
 // ── Amizades ─────────────────────────────────────────────────────────────────
