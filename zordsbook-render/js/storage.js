@@ -130,8 +130,10 @@ async function fetchCommunityData() {
     comments: (commentsRes.data || []).filter(c => c.post_id === post.id).map(c => ({
       userId: c.user_id, text: c.text, createdAt: new Date(c.created_at).getTime(),
     })),
+    
   }));
-
+ console.log('Número de posts:', posts.length)
+  
   const testimonials = (testimonialsRes.data || []).map(t => ({
     id: t.id, profileUserId: t.profile_user_id, authorUserId: t.author_user_id,
     text: t.text, createdAt: new Date(t.created_at).getTime(),
